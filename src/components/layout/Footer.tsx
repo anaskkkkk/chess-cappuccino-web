@@ -17,27 +17,28 @@ const Footer = () => {
           <div>
             <h4 className="font-medium text-chess-text-light mb-4">Products</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><Link to="/store" className="hover:text-chess-accent transition-colors">Smart Board</Link></li>
-              <li><Link to="/store" className="hover:text-chess-accent transition-colors">Accessories</Link></li>
-              <li><Link to="/store" className="hover:text-chess-accent transition-colors">Gift Cards</Link></li>
+              <li><Link to="/smart-board" className="hover:text-chess-accent transition-colors">Smart Board</Link></li>
+              <li><Link to="/accessories" className="hover:text-chess-accent transition-colors">Accessories</Link></li>
+              <li><Link to="/gift-cards" className="hover:text-chess-accent transition-colors">Gift Cards</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-medium text-chess-text-light mb-4">Resources</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><Link to="/learn" className="hover:text-chess-accent transition-colors">Courses</Link></li>
-              <li><Link to="/learn" className="hover:text-chess-accent transition-colors">Puzzles</Link></li>
-              <li><Link to="/help" className="hover:text-chess-accent transition-colors">FAQ</Link></li>
+              <li><Link to="/courses" className="hover:text-chess-accent transition-colors">Courses</Link></li>
+              <li><Link to="/puzzles" className="hover:text-chess-accent transition-colors">Puzzles</Link></li>
+              <li><Link to="/faq" className="hover:text-chess-accent transition-colors">FAQ</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-medium text-chess-text-light mb-4">Connect</h4>
+            <h4 className="font-medium text-chess-text-light mb-4">Quick Links</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-chess-accent transition-colors">Discord</a></li>
-              <li><a href="#" className="hover:text-chess-accent transition-colors">Twitter</a></li>
-              <li><a href="#" className="hover:text-chess-accent transition-colors">Instagram</a></li>
+              <li><Link to="/store" className="hover:text-chess-accent transition-colors">Store</Link></li>
+              <li><Link to="/play" className="hover:text-chess-accent transition-colors">Play</Link></li>
+              <li><Link to="/learn" className="hover:text-chess-accent transition-colors">Learn</Link></li>
+              <li><Link to="/community" className="hover:text-chess-accent transition-colors">Community</Link></li>
             </ul>
           </div>
         </div>
