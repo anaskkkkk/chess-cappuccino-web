@@ -11,7 +11,7 @@ import {
   TrendingUp, 
   Clock, 
   Award,
-  Refresh
+  RefreshCw
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -116,7 +116,7 @@ const Dashboard = () => {
                 </span>
               ) : (
                 <span className="flex items-center">
-                  <Refresh className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh Stats
                 </span>
               )}
