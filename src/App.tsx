@@ -22,6 +22,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import Game from "./pages/Game";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/store" element={<Store />} />
           <Route path="/play" element={<Play />} />
+          <Route path="/game/:gameId" element={<Game />} />
           <Route path="/learn" element={<Learn />} />
           <Route path="/community" element={<Community />} />
           <Route path="/smart-board" element={<SmartBoard />} />

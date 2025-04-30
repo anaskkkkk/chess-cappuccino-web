@@ -109,11 +109,47 @@
     @apply transition-all duration-300 hover:scale-[1.02];
   }
 
+  .hover-bright {
+    @apply transition-all duration-200 hover:brightness-110;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-[0_0_15px_rgba(183,154,122,0.3)];
+  }
+
   .nav-link {
     @apply text-chess-text-light hover:text-chess-accent transition-colors duration-200;
   }
 
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:border-chess-accent/50;
+  }
+  
+  /* Chess board styles */
+  .piece {
+    @apply text-5xl leading-none pointer-events-none select-none;
+  }
+  
+  /* Scrollbar for move list and chat */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--chess-accent) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(183, 154, 122, 0.6);
+    border-radius: 20px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(183, 154, 122, 0.8);
   }
 }
