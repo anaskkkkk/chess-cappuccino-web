@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, LogIn, UserPlus } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,9 +12,26 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import authService from "@/services/authService";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const isAuthenticated = authService.isAuthenticated();
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleSignup = () => {
+    navigate("/signup");
+  };
+
+  const handleLogout = async () => {
+    await authService.logout();
+    navigate("/");
+    window.location.reload();
+  };
 
   return (
     <nav className="w-full bg-chess-dark border-b border-[rgba(255,255,255,0.12)] py-4">
@@ -86,17 +103,45 @@ const Navbar = () => {
                   Community
                 </Link>
               </NavigationMenuItem>
+              {isAuthenticated && (
+                <NavigationMenuItem>
+                  <Link to="/dashboard" className="text-chess-text-light hover:text-chess-accent transition-colors inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium">
+                    Dashboard
+                  </Link>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
         
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light">
-            Log In
-          </Button>
-          <Button className="bg-chess-accent text-chess-text-light hover:bg-opacity-90">
-            Sign Up
-          </Button>
+          {isAuthenticated ? (
+            <Button 
+              variant="outline" 
+              className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light"
+              onClick={handleLogout}
+            >
+              Log Out
+            </Button>
+          ) : (
+            <>
+              <Button 
+                variant="outline" 
+                className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light"
+                onClick={handleLogin}
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Log In
+              </Button>
+              <Button 
+                className="bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+                onClick={handleSignup}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Sign Up
+              </Button>
+            </>
+          )}
         </div>
         
         <div className="md:hidden">
@@ -134,15 +179,48 @@ const Navbar = () => {
               <div className="space-y-2">
                 <Link to="/play" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Play</Link>
                 <Link to="/community" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Community</Link>
+                {isAuthenticated && (
+                  <Link to="/dashboard" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                )}
               </div>
               
               <div className="pt-4 flex flex-col space-y-3">
-                <Button variant="outline" className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light w-full">
-                  Log In
-                </Button>
-                <Button className="bg-chess-accent text-chess-text-light hover:bg-opacity-90 w-full">
-                  Sign Up
-                </Button>
+                {isAuthenticated ? (
+                  <Button 
+                    variant="outline" 
+                    className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light w-full"
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    Log Out
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light w-full"
+                      onClick={() => {
+                        handleLogin();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Log In
+                    </Button>
+                    <Button 
+                      className="bg-chess-accent text-chess-text-light hover:bg-opacity-90 w-full"
+                      onClick={() => {
+                        handleSignup();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Sign Up
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
