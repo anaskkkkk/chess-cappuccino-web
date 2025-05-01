@@ -1,155 +1,159 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './tailwind.css';
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    /* Chess theme border variables */
-    --border-subtle-dark: rgba(255, 255, 255, 0.12);
-    --border-subtle-light: rgba(0, 0, 0, 0.08);
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+:root {
+  --primary: 215.15 26.7% 17.45%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 215 14.3% 46.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 217.24 32.58% 17.45%;
+  --muted-foreground: 214.29 31.8% 60.8%;
+  --accent: 35 60% 60%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --background: 0 0% 4%;
+  --foreground: 210 20% 98%;
+  --card: 222.24 47.58% 11.45%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224.24 71.58% 4.45%;
+  --popover-foreground: 210 20% 98%;
+  --border: 217.24 32.58% 17.45%;
+  --input: 217.24 32.58% 17.45%;
+  --ring: 215 20.25% 36.6%;
+  --sidebar-background: 240 5.9% 10%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-muted: 231 15% 18%;
+  --sidebar-muted-foreground: 220 8.9% 56.1%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-primary: 0 0% 98%;
+  --sidebar-primary-foreground: 240 5.9% 10%;
+  --sidebar-ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-chess-dark text-chess-text-light;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+  background: theme('colors.chess.dark');
 }
 
-@layer components {
-  .chess-btn-primary {
-    @apply bg-chess-accent text-chess-text-light py-3 px-6 rounded-md 
-    hover:bg-opacity-90 transition-all duration-200 font-medium active:scale-[0.98];
-  }
+/* For WebKit browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  .chess-btn-secondary {
-    @apply bg-transparent border border-chess-accent text-chess-accent py-3 px-6 rounded-md 
-    hover:bg-chess-accent hover:bg-opacity-10 transition-all duration-200 font-medium active:scale-[0.98];
-  }
-  
-  .feature-card {
-    @apply bg-chess-beige-100 rounded-lg p-6 shadow-md text-chess-text-dark flex flex-col items-center hover:shadow-lg transition-all duration-200;
-  }
-  
-  .border-subtle {
-    @apply border border-[rgba(255,255,255,0.12)];
-  }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
 
-  .hover-lift {
-    @apply transition-all duration-300 hover:translate-y-[-5px] hover:shadow-lg;
-  }
-  
-  .hover-grow {
-    @apply transition-all duration-300 hover:scale-[1.02];
-  }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
 
-  .hover-bright {
-    @apply transition-all duration-200 hover:brightness-110;
-  }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
 
-  .hover-glow {
-    @apply transition-all duration-300 hover:shadow-[0_0_15px_rgba(183,154,122,0.3)];
-  }
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  .nav-link {
-    @apply text-chess-text-light hover:text-chess-accent transition-colors duration-200;
-  }
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
 
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:border-chess-accent/50;
-  }
-  
-  /* Chess board styles */
-  .piece {
-    @apply text-5xl leading-none pointer-events-none select-none;
-  }
-  
-  /* Scrollbar for move list and chat */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: var(--chess-accent) transparent;
-  }
+/* Border subtle effect */
+.border-subtle {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.2s ease;
+}
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-  }
+.border-subtle:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
 
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
+/* Card hover effect */
+.card-hover {
+  transition: all 0.3s ease;
+}
 
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(183, 154, 122, 0.6);
-    border-radius: 20px;
-  }
+.card-hover:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
 
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(183, 154, 122, 0.8);
-  }
+/* RTL Support */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.rtl .ltr-text {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Keep numbers in LTR direction even in RTL mode */
+.rtl .keep-ltr {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* Chess notation should always be LTR */
+.chess-notation {
+  direction: ltr;
+  font-family: monospace;
+}
+
+/* Fix flexbox ordering in RTL mode */
+.rtl .reverse-flex {
+  flex-direction: row-reverse;
+}
+
+/* Board coordinates should not be affected by RTL */
+.square span {
+  direction: ltr;
+}
+
+/* Animation for piece movement */
+@keyframes piece-glow {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
+}
+
+.piece-animate {
+  animation: piece-glow 0.6s ease-in-out;
+}
+
+/* Page transition animations */
+.page-enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 300ms, transform 300ms;
 }

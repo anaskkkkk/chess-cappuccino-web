@@ -6,11 +6,12 @@ import { GameOptions, GameState } from './gameService';
  * Central place for all REST API calls
  */
 class ApiService {
-  // User related API calls
+  //==========================================================================
+  // USER RELATED API CALLS
+  //==========================================================================
   
   // TODO: REST API - Get user profile
   async getUserProfile(userId: string) {
-    // In production, this would call the actual API
     try {
       const response = await api.get(`/users/${userId}`);
       return response.data;
@@ -31,7 +32,9 @@ class ApiService {
     }
   }
   
-  // Game related API calls
+  //==========================================================================
+  // GAME RELATED API CALLS
+  //==========================================================================
   
   // TODO: REST API - Create a new game
   async createGame(mode: string, options?: GameOptions): Promise<GameState> {
@@ -66,6 +69,10 @@ class ApiService {
     }
   }
   
+  //==========================================================================
+  // TOURNAMENT RELATED API CALLS
+  //==========================================================================
+  
   // TODO: REST API - Get available tournaments
   async getTournaments(page = 1, limit = 10) {
     try {
@@ -88,6 +95,21 @@ class ApiService {
     }
   }
   
+  // TODO: REST API - Get tournament details
+  async getTournamentDetails(tournamentId: string) {
+    try {
+      const response = await api.get(`/tournaments/${tournamentId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tournament details:', error);
+      throw error;
+    }
+  }
+  
+  //==========================================================================
+  // LEADERBOARD RELATED API CALLS
+  //==========================================================================
+  
   // TODO: REST API - Get leaderboard
   async getLeaderboard(timeframe = 'monthly', page = 1, limit = 10) {
     try {
@@ -98,6 +120,10 @@ class ApiService {
       throw error;
     }
   }
+  
+  //==========================================================================
+  // LEARNING RELATED API CALLS
+  //==========================================================================
   
   // TODO: REST API - Get available courses
   async getCourses(page = 1, limit = 10) {
@@ -131,6 +157,10 @@ class ApiService {
       throw error;
     }
   }
+  
+  //==========================================================================
+  // STORE RELATED API CALLS
+  //==========================================================================
   
   // TODO: REST API - Get store items
   async getStoreItems(category = 'all', page = 1, limit = 10) {
@@ -175,6 +205,10 @@ class ApiService {
       throw error;
     }
   }
+  
+  //==========================================================================
+  // SMARTBOARD RELATED API CALLS
+  //==========================================================================
   
   // TODO: REST API - Pair SmartBoard
   async pairSmartBoard(boardId: string, userId: string) {

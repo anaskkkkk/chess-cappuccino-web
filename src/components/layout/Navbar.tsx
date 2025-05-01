@@ -1,260 +1,154 @@
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, LogIn, UserPlus } from "lucide-react";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import authService from "@/services/authService";
+import { Menu, X } from "lucide-react";
+import useMobile from "@/hooks/use-mobile";
+import BoardStatus from "@/components/common/BoardStatus";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import { useLanguageContext } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const isAuthenticated = authService.isAuthenticated();
+  const isMobile = useMobile();
+  const [isOpen, setIsOpen] = useState(false);
+  const { t, isRTL } = useLanguageContext();
 
-  const handleLogin = () => {
-    navigate("/login");
-  };
+  const navItems = [
+    { name: t("play"), href: "/play" },
+    { name: t("learn"), href: "/learn" },
+    { name: t("community"), href: "/community" },
+    { name: t("smartBoard"), href: "/smart-board" },
+    { name: t("store"), href: "/store" },
+  ];
 
-  const handleSignup = () => {
-    navigate("/signup");
-  };
-
-  const handleLogout = async () => {
-    await authService.logout();
-    navigate("/");
-    window.location.reload();
-  };
+  const toggleMenu = () => setIsOpen((prev) => !prev);
 
   return (
-    <nav className="w-full bg-chess-dark border-b border-[rgba(255,255,255,0.12)] py-4">
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="font-bold text-2xl text-chess-text-light">Smart<span className="text-chess-accent">Chess</span></div>
-        </Link>
-        
-        <div className="hidden md:block">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-chess-text-light hover:text-chess-accent">Store</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <li className="row-span-3">
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to="/store"
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-chess-accent p-6 no-underline outline-none focus:shadow-md"
-                        >
-                          <div className="mb-2 mt-4 text-lg font-medium text-chess-text-light">
-                            SmartChess Store
-                          </div>
-                          <p className="text-sm leading-tight text-chess-text-light/90">
-                            Explore our innovative chess products and accessories
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <ListItem to="/smart-board" title="Smart Board">
-                      Our flagship electronic chess board with online connectivity
-                    </ListItem>
-                    <ListItem to="/accessories" title="Accessories">
-                      Enhance your chess experience with premium accessories
-                    </ListItem>
-                    <ListItem to="/gift-cards" title="Gift Cards">
-                      The perfect gift for chess enthusiasts
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-chess-text-light hover:text-chess-accent">Learn</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
-                    <ListItem to="/learn" title="Learning Center">
-                      Everything you need to improve your chess skills
-                    </ListItem>
-                    <ListItem to="/courses" title="Courses">
-                      Structured lessons from beginner to master
-                    </ListItem>
-                    <ListItem to="/puzzles" title="Puzzles">
-                      Sharpen your tactical skills with thousands of puzzles
-                    </ListItem>
-                    <ListItem to="/faq" title="FAQ">
-                      Find answers to common questions about our products and services
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/play" className="text-chess-text-light hover:text-chess-accent transition-colors inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium">
-                  Play
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/community" className="text-chess-text-light hover:text-chess-accent transition-colors inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium">
-                  Community
-                </Link>
-              </NavigationMenuItem>
-              {isAuthenticated && (
-                <NavigationMenuItem>
-                  <Link to="/dashboard" className="text-chess-text-light hover:text-chess-accent transition-colors inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium">
-                    Dashboard
-                  </Link>
-                </NavigationMenuItem>
+    <nav className="bg-chess-dark border-b border-[rgba(255,255,255,0.1)] sticky top-0 z-50 animate-fade-in">
+      <div className="container mx-auto px-4 md:px-6 py-3">
+        <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+          {/* Logo and site name */}
+          <div className="flex items-center">
+            <Link
+              to="/"
+              className={cn(
+                "flex items-center space-x-2 text-2xl font-bold text-white transition-all hover:opacity-90", 
+                isRTL && "flex-row-reverse space-x-reverse"
               )}
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-4">
-          {isAuthenticated ? (
-            <Button 
-              variant="outline" 
-              className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light"
-              onClick={handleLogout}
             >
-              Log Out
+              <span className="bg-chess-accent text-chess-text-light px-2 py-1 rounded">
+                S
+              </span>
+              <span className="hidden sm:inline text-chess-text-light">{t("appName")}</span>
+            </Link>
+          </div>
+
+          {/* Desktop navigation */}
+          <div className={cn(
+            "hidden md:flex items-center space-x-1",
+            isRTL && "flex-row-reverse space-x-reverse"
+          )}>
+            {navItems.map((item) => (
+              <Link key={item.name} to={item.href}>
+                <Button
+                  variant="ghost"
+                  className="text-chess-text-light hover:bg-white/10 transition-colors"
+                >
+                  {item.name}
+                </Button>
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              className="text-chess-text-light hover:bg-white/10"
+              onClick={toggleMenu}
+            >
+              {isOpen ? <X /> : <Menu />}
             </Button>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light"
-                onClick={handleLogin}
+          </div>
+
+          {/* Right side items */}
+          <div className={cn(
+            "hidden md:flex items-center space-x-2",
+            isRTL && "flex-row-reverse space-x-reverse"
+          )}>
+            <BoardStatus />
+            <LanguageSwitcher />
+            
+            <Link to="/login">
+              <Button
+                variant="outline"
+                className="border-chess-accent text-chess-accent hover:bg-chess-accent/10"
               >
-                <LogIn className="h-4 w-4 mr-2" />
-                Log In
+                {t("signIn")}
               </Button>
-              <Button 
-                className="bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={handleSignup}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Sign Up
+            </Link>
+            
+            <Link to="/signup">
+              <Button className="bg-chess-accent text-chess-text-light hover:bg-opacity-90">
+                {t("signUp")}
               </Button>
-            </>
+            </Link>
+          </div>
+        </div>
+
+        {/* Mobile navigation menu */}
+        <div
+          className={cn(
+            "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
+            isOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
           )}
-        </div>
-        
-        <div className="md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <Menu className="h-6 w-6 text-chess-text-light" />
-          </Button>
-        </div>
-      </div>
-      
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-chess-dark border-t border-[rgba(255,255,255,0.12)] mt-4">
-          <div className="container mx-auto px-4 py-4">
-            <div className="space-y-4">
-              <div>
-                <div className="text-chess-accent font-medium mb-2">Store</div>
-                <ul className="space-y-2 pl-4">
-                  <li><Link to="/store" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>All Products</Link></li>
-                  <li><Link to="/smart-board" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Smart Board</Link></li>
-                  <li><Link to="/accessories" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Accessories</Link></li>
-                  <li><Link to="/gift-cards" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Gift Cards</Link></li>
-                </ul>
-              </div>
+        >
+          <div className="flex flex-col space-y-2 pt-2 pb-3 border-t border-[rgba(255,255,255,0.1)] animate-fade-in">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className="text-chess-text-light hover:bg-white/10 px-4 py-2 rounded transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            
+            <div className={cn(
+              "flex items-center justify-between px-4 py-2",
+              isRTL && "flex-row-reverse"
+            )}>
+              <BoardStatus />
+              <LanguageSwitcher />
+            </div>
+            
+            <div className={cn(
+              "flex items-center justify-between space-x-2 px-4 py-2",
+              isRTL && "flex-row-reverse space-x-reverse"
+            )}>
+              <Link to="/login" className="flex-1">
+                <Button
+                  variant="outline"
+                  className="w-full border-chess-accent text-chess-accent hover:bg-chess-accent/10"
+                >
+                  {t("signIn")}
+                </Button>
+              </Link>
               
-              <div>
-                <div className="text-chess-accent font-medium mb-2">Learn</div>
-                <ul className="space-y-2 pl-4">
-                  <li><Link to="/learn" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Learning Center</Link></li>
-                  <li><Link to="/courses" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Courses</Link></li>
-                  <li><Link to="/puzzles" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Puzzles</Link></li>
-                  <li><Link to="/faq" className="text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>FAQ</Link></li>
-                </ul>
-              </div>
-              
-              <div className="space-y-2">
-                <Link to="/play" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Play</Link>
-                <Link to="/community" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Community</Link>
-                {isAuthenticated && (
-                  <Link to="/dashboard" className="block text-chess-text-light hover:text-chess-accent transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                )}
-              </div>
-              
-              <div className="pt-4 flex flex-col space-y-3">
-                {isAuthenticated ? (
-                  <Button 
-                    variant="outline" 
-                    className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light w-full"
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    Log Out
-                  </Button>
-                ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="border-chess-accent text-chess-accent hover:bg-chess-accent hover:text-chess-text-light w-full"
-                      onClick={() => {
-                        handleLogin();
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Log In
-                    </Button>
-                    <Button 
-                      className="bg-chess-accent text-chess-text-light hover:bg-opacity-90 w-full"
-                      onClick={() => {
-                        handleSignup();
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Sign Up
-                    </Button>
-                  </>
-                )}
-              </div>
+              <Link to="/signup" className="flex-1">
+                <Button className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90">
+                  {t("signUp")}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
-
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & { to: string, title: string }
->(({ className, title, children, to, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <Link
-          to={to}
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none text-chess-text-dark">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-gray-700">
-            {children}
-          </p>
-        </Link>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";
 
 export default Navbar;

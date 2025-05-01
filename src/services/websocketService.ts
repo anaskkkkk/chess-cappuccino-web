@@ -20,6 +20,10 @@ class WebSocketService {
     this.url = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/ws';
   }
   
+  //==========================================================================
+  // CORE WEBSOCKET FUNCTIONALITY
+  //==========================================================================
+  
   public connect(gameId?: string): Promise<void> {
     if (this.socket?.readyState === WebSocket.OPEN) {
       return Promise.resolve();
@@ -169,8 +173,10 @@ class WebSocketService {
     }
   }
 
-  // WebSocket API Methods
-  
+  //==========================================================================
+  // GAME RELATED WEBSOCKET API CALLS
+  //==========================================================================
+
   // TODO: WebSocket API - Join game
   public joinGame(gameId: string): void {
     this.send({
@@ -219,6 +225,10 @@ class WebSocketService {
     });
   }
   
+  //==========================================================================
+  // CHAT RELATED WEBSOCKET API CALLS
+  //==========================================================================
+  
   // TODO: WebSocket API - Send chat message
   public sendChatMessage(gameId: string, message: string): void {
     this.send({
@@ -226,6 +236,10 @@ class WebSocketService {
       payload: { gameId, message }
     });
   }
+  
+  //==========================================================================
+  // TAKEBACK RELATED WEBSOCKET API CALLS
+  //==========================================================================
   
   // TODO: WebSocket API - Request takeback
   public requestTakeback(gameId: string): void {
@@ -243,6 +257,10 @@ class WebSocketService {
     });
   }
   
+  //==========================================================================
+  // CONNECTIVITY RELATED WEBSOCKET API CALLS
+  //==========================================================================
+  
   // TODO: WebSocket API - Send ping
   public sendPing(): void {
     this.send({
@@ -250,6 +268,10 @@ class WebSocketService {
       payload: { timestamp: Date.now() }
     });
   }
+  
+  //==========================================================================
+  // SUBSCRIPTION RELATED WEBSOCKET API CALLS
+  //==========================================================================
   
   // TODO: WebSocket API - Subscribe to live games
   public subscribeLiveGames(): void {
@@ -266,6 +288,10 @@ class WebSocketService {
       payload: { tournamentId }
     });
   }
+  
+  //==========================================================================
+  // USER PRESENCE RELATED WEBSOCKET API CALLS
+  //==========================================================================
   
   // TODO: WebSocket API - Subscribe to user presence
   public subscribeUserPresence(userId: string): void {
