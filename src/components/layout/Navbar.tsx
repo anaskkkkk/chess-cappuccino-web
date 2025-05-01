@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BoardStatus from "@/components/common/BoardStatus";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
@@ -81,6 +81,18 @@ const Navbar = () => {
             <BoardStatus />
             <LanguageSwitcher />
             
+            {/* Admin link for easy access */}
+            <Link to="/admin">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-chess-text-light hover:bg-white/10"
+                title="Admin Console"
+              >
+                <Settings size={20} />
+              </Button>
+            </Link>
+            
             <Link to="/login">
               <Button
                 variant="outline"
@@ -116,6 +128,17 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            
+            <Link
+              to="/admin"
+              className="text-chess-text-light hover:bg-white/10 px-4 py-2 rounded transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="flex items-center gap-2">
+                <Settings size={16} />
+                Admin Console
+              </div>
+            </Link>
             
             <div className={cn(
               "flex items-center justify-between px-4 py-2",

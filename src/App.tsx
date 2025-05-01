@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +27,14 @@ import Game from "./pages/Game";
 import Tournaments from "./pages/Tournaments";
 import Analysis from "./pages/Analysis";
 import Spectate from "./pages/Spectate";
+
+// Admin Components
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import GameManagement from "./pages/admin/GameManagement";
+import TournamentManager from "./pages/admin/TournamentManager";
+import CoursesCMS from "./pages/admin/CoursesCMS";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +69,32 @@ const AppRoutes = () => {
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/spectate" element={<Spectate />} />
           <Route path="/spectate/game/:gameId" element={<Game />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+          <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+          <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
+          <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
+          <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
+          
+          {/* Other admin routes - will add placeholder components as they're developed */}
+          <Route path="/admin/puzzles" element={<AdminLayout><div className="p-6 text-chess-text-light">Puzzles Content Management System</div></AdminLayout>} />
+          <Route path="/admin/content" element={<AdminLayout><div className="p-6 text-chess-text-light">Content Pages Builder</div></AdminLayout>} />
+          <Route path="/admin/orders" element={<AdminLayout><div className="p-6 text-chess-text-light">Orders & Payments Management</div></AdminLayout>} />
+          <Route path="/admin/smartboards" element={<AdminLayout><div className="p-6 text-chess-text-light">SmartBoard Fleet Management</div></AdminLayout>} />
+          <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
+          <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
+          <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
+          <Route path="/admin/localization" element={<AdminLayout><div className="p-6 text-chess-text-light">Localization Management</div></AdminLayout>} />
+          <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
+          <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
+          <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
+          <Route path="/admin/health" element={<AdminLayout><div className="p-6 text-chess-text-light">System Health Monitor</div></AdminLayout>} />
+          <Route path="/admin/backup" element={<AdminLayout><div className="p-6 text-chess-text-light">Backup & Restore</div></AdminLayout>} />
+          <Route path="/admin/integrations" element={<AdminLayout><div className="p-6 text-chess-text-light">Integrations Management</div></AdminLayout>} />
+          <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
+          <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>

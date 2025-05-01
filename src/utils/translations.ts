@@ -77,6 +77,37 @@ export const translations: Translations = {
     
     // Message
     findingMatch: "Finding Match...",
+    
+    // Admin sections
+    Core: "Core",
+    Content: "Content",
+    Business: "Business",
+    Hardware: "Hardware",
+    Monitoring: "Monitoring",
+    Settings: "Settings",
+    
+    // Admin pages
+    "Dashboard": "Dashboard",
+    "User Management": "User Management",
+    "Game Management": "Game Management",
+    "Tournament Manager": "Tournament Manager",
+    "Courses": "Courses",
+    "Puzzles": "Puzzles",
+    "Content Pages": "Content Pages",
+    "Orders & Payments": "Orders & Payments",
+    "SmartBoard Fleet": "SmartBoard Fleet",
+    "Real-Time Logs": "Real-Time Logs", 
+    "Notifications": "Notifications",
+    "Analytics": "Analytics",
+    "Localization": "Localization",
+    "Sound & Assets": "Sound & Assets",
+    "Roles & Permissions": "Roles & Permissions",
+    "Security & Audit": "Security & Audit",
+    "System Health": "System Health",
+    "Backup & Restore": "Backup & Restore",
+    "Integrations": "Integrations",
+    "Feature Flags": "Feature Flags",
+    "Help & Support": "Help & Support"
   },
   ar: {
     // Common
@@ -145,6 +176,37 @@ export const translations: Translations = {
     
     // Message
     findingMatch: "جاري البحث عن مباراة...",
+    
+    // Admin sections
+    Core: "أساسي",
+    Content: "المحتوى",
+    Business: "الأعمال",
+    Hardware: "الأجهزة",
+    Monitoring: "المراقبة",
+    Settings: "الإعدادات",
+    
+    // Admin pages
+    "Dashboard": "لوحة التحكم",
+    "User Management": "إدارة المستخدمين",
+    "Game Management": "إدارة الألعاب",
+    "Tournament Manager": "مدير البطولات",
+    "Courses": "الدورات التعليمية",
+    "Puzzles": "الألغاز",
+    "Content Pages": "صفحات المحتوى",
+    "Orders & Payments": "الطلبات والمدفوعات",
+    "SmartBoard Fleet": "أسطول اللوحات الذكية",
+    "Real-Time Logs": "سجلات الوقت الفعلي",
+    "Notifications": "الإشعارات",
+    "Analytics": "التحليلات",
+    "Localization": "الترجمة والتوطين",
+    "Sound & Assets": "الصوت والأصول",
+    "Roles & Permissions": "الأدوار والصلاحيات",
+    "Security & Audit": "الأمان والتدقيق",
+    "System Health": "صحة النظام",
+    "Backup & Restore": "النسخ الاحتياطي والاستعادة",
+    "Integrations": "التكاملات",
+    "Feature Flags": "ميزات التجريبية", 
+    "Help & Support": "المساعدة والدعم"
   }
 };
 
