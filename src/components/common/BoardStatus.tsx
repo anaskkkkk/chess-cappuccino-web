@@ -75,7 +75,7 @@ const BoardStatus: React.FC<BoardStatusProps> = ({ compact = false, className })
         </TooltipTrigger>
         <TooltipContent className="bg-chess-dark text-chess-text-light border border-[rgba(255,255,255,0.15)]">
           <p>
-            {isConnected ? t("boar username.dOnline") : t("boardOffline")}
+            {isConnected ? t("boardOnline") : t("boardOffline")}
           </p>
           {!isConnected && (
             <p className="text-xs text-gray-400 mt-1">

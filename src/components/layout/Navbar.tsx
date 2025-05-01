@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
-import useMobile from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import BoardStatus from "@/components/common/BoardStatus";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const { t, isRTL } = useLanguageContext();
 
