@@ -1,3 +1,4 @@
+
 export interface WebSocketMessage {
   type: string;
   payload: any;
@@ -15,7 +16,7 @@ class WebSocketService {
   private connectionPromise: Promise<void> | null = null;
   
   constructor() {
-    // TODO: Use environment variable for WebSocket URL
+    // TODO: WebSocket API - Use environment variable for WebSocket URL
     this.url = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/ws';
   }
   
@@ -166,6 +167,120 @@ class WebSocketService {
     if (callbacks) {
       callbacks.forEach(callback => callback(payload));
     }
+  }
+
+  // WebSocket API Methods
+  
+  // TODO: WebSocket API - Join game
+  public joinGame(gameId: string): void {
+    this.send({
+      type: 'join_game',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Make move
+  public makeMove(gameId: string, move: string): void {
+    this.send({
+      type: 'make_move',
+      payload: { gameId, move }
+    });
+  }
+  
+  // TODO: WebSocket API - Resign game
+  public resignGame(gameId: string): void {
+    this.send({
+      type: 'resign',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Offer draw
+  public offerDraw(gameId: string): void {
+    this.send({
+      type: 'offer_draw',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Accept draw
+  public acceptDraw(gameId: string): void {
+    this.send({
+      type: 'accept_draw',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Decline draw
+  public declineDraw(gameId: string): void {
+    this.send({
+      type: 'decline_draw',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Send chat message
+  public sendChatMessage(gameId: string, message: string): void {
+    this.send({
+      type: 'chat_message',
+      payload: { gameId, message }
+    });
+  }
+  
+  // TODO: WebSocket API - Request takeback
+  public requestTakeback(gameId: string): void {
+    this.send({
+      type: 'request_takeback',
+      payload: { gameId }
+    });
+  }
+  
+  // TODO: WebSocket API - Respond to takeback request
+  public respondToTakeback(gameId: string, accept: boolean): void {
+    this.send({
+      type: 'takeback_response',
+      payload: { gameId, accept }
+    });
+  }
+  
+  // TODO: WebSocket API - Send ping
+  public sendPing(): void {
+    this.send({
+      type: 'ping',
+      payload: { timestamp: Date.now() }
+    });
+  }
+  
+  // TODO: WebSocket API - Subscribe to live games
+  public subscribeLiveGames(): void {
+    this.send({
+      type: 'subscribe_live_games',
+      payload: {}
+    });
+  }
+  
+  // TODO: WebSocket API - Subscribe to tournament updates
+  public subscribeTournament(tournamentId: string): void {
+    this.send({
+      type: 'subscribe_tournament',
+      payload: { tournamentId }
+    });
+  }
+  
+  // TODO: WebSocket API - Subscribe to user presence
+  public subscribeUserPresence(userId: string): void {
+    this.send({
+      type: 'subscribe_user_presence',
+      payload: { userId }
+    });
+  }
+  
+  // TODO: WebSocket API - Send user status
+  public sendUserStatus(status: 'online' | 'away' | 'busy' | 'offline'): void {
+    this.send({
+      type: 'user_status',
+      payload: { status }
+    });
   }
 }
 
