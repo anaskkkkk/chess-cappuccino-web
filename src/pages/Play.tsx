@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
@@ -55,9 +54,8 @@ const Play = () => {
       setLoading('friend');
       toast.info('Creating game...');
       
-      // In a real app, this would validate the friend code
-      // For now, create a game directly
-      const gameData = await createGame('friend', { friendCode });
+      // Fixed: Changed friendCode to friendId to match GameOptions interface
+      const gameData = await createGame('friend', { friendId: friendCode });
       
       // Close dialog and navigate to the game
       setShowFriendDialog(false);
