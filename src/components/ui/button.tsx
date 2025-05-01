@@ -10,15 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-chess-accent text-chess-text-light hover:bg-opacity-90 active:scale-[0.98] shadow-sm hover:shadow",
+        default: "bg-chess-accent text-chess-text-light hover:bg-opacity-90 active:scale-[0.98] shadow-sm hover:shadow transition-all",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-[0.98] shadow-sm hover:shadow",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-[0.98] shadow-sm hover:shadow transition-all",
         outline:
-          "border border-chess-accent bg-transparent text-chess-accent hover:bg-chess-accent/10 active:scale-[0.98]",
+          "border border-chess-accent bg-transparent text-chess-accent hover:bg-chess-accent/10 active:scale-[0.98] transition-all",
         secondary:
-          "bg-chess-beige-100 text-chess-text-dark hover:bg-chess-beige-300 active:scale-[0.98] shadow-sm hover:shadow",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-chess-accent underline-offset-4 hover:underline",
+          "bg-chess-beige-100 text-chess-text-dark hover:bg-chess-beige-300 active:scale-[0.98] shadow-sm hover:shadow transition-all",
+        ghost: "hover:bg-white/5 text-chess-text-light transition-all",
+        link: "text-chess-accent underline-offset-4 hover:underline transition-all",
       },
       size: {
         default: "h-10 px-4 py-2",

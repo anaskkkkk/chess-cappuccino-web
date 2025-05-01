@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { GameState } from '@/services/gameService';
-import { UserCircle, Clock } from 'lucide-react';
+import { UserCircle, Clock, Shield, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import useGameStore from '@/stores/gameStore';
 
 interface GameInfoProps {
   gameState: GameState | null;
@@ -12,6 +13,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
   const [whiteTime, setWhiteTime] = useState(gameState?.timers?.w || 600);
   const [blackTime, setBlackTime] = useState(gameState?.timers?.b || 600);
   const [activePlayer, setActivePlayer] = useState<'w' | 'b'>('w'); // Assuming white starts
+  const { inCheck } = useGameStore();
 
   // Parse FEN to determine active player
   useEffect(() => {
@@ -60,7 +62,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
       {/* Black player info */}
       <div className={cn(
         "flex items-center justify-between mb-4 p-2 rounded-md",
-        activePlayer === 'b' && !gameState?.result && "bg-chess-accent/20"
+        activePlayer === 'b' && !gameState?.result && "bg-chess-accent/20 transition-all"
       )}>
         <div className="flex items-center gap-3">
           <UserCircle className="h-8 w-8 text-chess-text-light" />
@@ -71,7 +73,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
         </div>
         <div className={cn(
           "flex items-center gap-2 px-3 py-1 rounded-md bg-chess-dark border border-[rgba(255,255,255,0.12)]",
-          blackTime < 30 && "text-red-500"
+          blackTime < 30 && "text-red-500 animate-pulse"
         )}>
           <Clock className="h-4 w-4" />
           <span className="font-mono">{formatTime(blackTime)}</span>
@@ -81,10 +83,16 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
       {/* Game status */}
       <div className="text-center my-4 py-2 bg-chess-dark border border-[rgba(255,255,255,0.08)] rounded-md">
         {gameState?.result ? (
-          <p className="text-chess-accent font-bold">
+          <div className="flex items-center justify-center gap-2 text-chess-accent font-bold">
+            <Trophy className="h-5 w-5" />
             {gameState.result === '1-0' ? 'White wins' : 
              gameState.result === '0-1' ? 'Black wins' : 'Draw'}
-          </p>
+          </div>
+        ) : inCheck ? (
+          <div className="flex items-center justify-center gap-2 text-red-500 font-bold">
+            <Shield className="h-5 w-5" />
+            {activePlayer === 'w' ? 'White' : 'Black'} is in check!
+          </div>
         ) : (
           <p className="text-chess-text-light">
             {activePlayer === 'w' ? 'White to move' : 'Black to move'}
@@ -95,7 +103,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
       {/* White player info */}
       <div className={cn(
         "flex items-center justify-between p-2 rounded-md",
-        activePlayer === 'w' && !gameState?.result && "bg-chess-accent/20"
+        activePlayer === 'w' && !gameState?.result && "bg-chess-accent/20 transition-all"
       )}>
         <div className="flex items-center gap-3">
           <UserCircle className="h-8 w-8 text-chess-text-light" />
@@ -106,7 +114,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ gameState }) => {
         </div>
         <div className={cn(
           "flex items-center gap-2 px-3 py-1 rounded-md bg-chess-dark border border-[rgba(255,255,255,0.12)]",
-          whiteTime < 30 && "text-red-500"
+          whiteTime < 30 && "text-red-500 animate-pulse"
         )}>
           <Clock className="h-4 w-4" />
           <span className="font-mono">{formatTime(whiteTime)}</span>

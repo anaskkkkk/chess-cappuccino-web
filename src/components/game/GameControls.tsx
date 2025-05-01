@@ -1,15 +1,16 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Flag, Handshake, RotateCcw, RotateCw } from 'lucide-react';
+import { Flag, Handshake, RotateCw, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface GameControlsProps {
   onResign: () => void;
   onOfferDraw: () => void;
+  onFlipBoard: () => void;
 }
 
-const GameControls: React.FC<GameControlsProps> = ({ onResign, onOfferDraw }) => {
+const GameControls: React.FC<GameControlsProps> = ({ onResign, onOfferDraw, onFlipBoard }) => {
   const [resignDialogOpen, setResignDialogOpen] = useState(false);
   
   const handleResignConfirm = () => {
@@ -47,6 +48,7 @@ const GameControls: React.FC<GameControlsProps> = ({ onResign, onOfferDraw }) =>
           size="sm"
           className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
           onClick={() => {}}
+          disabled
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Undo
@@ -56,7 +58,7 @@ const GameControls: React.FC<GameControlsProps> = ({ onResign, onOfferDraw }) =>
           variant="outline"
           size="sm"
           className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
-          onClick={() => {}}
+          onClick={onFlipBoard}
         >
           <RotateCw className="h-4 w-4 mr-2" />
           Flip Board

@@ -11,6 +11,8 @@ class WebSocketService {
   private reconnectDelay: number = 1000;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
   private isConnecting: boolean = false;
+  private messageQueue: WebSocketMessage[] = [];
+  private connectionPromise: Promise<void> | null = null;
   
   constructor() {
     // TODO: Use environment variable for WebSocket URL
@@ -23,19 +25,12 @@ class WebSocketService {
     }
     
     if (this.isConnecting) {
-      return new Promise((resolve) => {
-        const checkConnected = setInterval(() => {
-          if (this.socket?.readyState === WebSocket.OPEN) {
-            clearInterval(checkConnected);
-            resolve();
-          }
-        }, 100);
-      });
+      return this.connectionPromise || Promise.resolve();
     }
     
     this.isConnecting = true;
     
-    return new Promise((resolve, reject) => {
+    this.connectionPromise = new Promise((resolve, reject) => {
       try {
         const token = localStorage.getItem('auth_token');
         const wsUrl = gameId ? `${this.url}?gameId=${gameId}&token=${token}` : `${this.url}?token=${token}`;
@@ -46,12 +41,21 @@ class WebSocketService {
           console.log('WebSocket connection established');
           this.reconnectAttempts = 0;
           this.isConnecting = false;
+          
+          // Process any queued messages
+          while (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift();
+            if (message) this.send(message);
+          }
+          
           resolve();
           
           // Send heartbeat every 30 seconds to keep connection alive
-          setInterval(() => {
+          const heartbeatInterval = setInterval(() => {
             if (this.socket?.readyState === WebSocket.OPEN) {
               this.send({ type: 'heartbeat', payload: { timestamp: Date.now() } });
+            } else {
+              clearInterval(heartbeatInterval);
             }
           }, 30000);
         };
@@ -74,36 +78,51 @@ class WebSocketService {
         this.socket.onclose = (event) => {
           console.log('WebSocket connection closed:', event.code, event.reason);
           this.isConnecting = false;
+          this.connectionPromise = null;
           
-          if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          // Only try to reconnect if closure wasn't intentional (code 1000)
+          if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1);
             console.log(`Attempting to reconnect in ${delay}ms...`);
             setTimeout(() => this.connect(gameId), delay);
-          } else {
+          } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             console.error('Max reconnect attempts reached. Giving up.');
           }
         };
       } catch (error) {
         this.isConnecting = false;
+        this.connectionPromise = null;
         console.error('Error creating WebSocket:', error);
         reject(error);
       }
     });
+    
+    return this.connectionPromise;
   }
   
   public disconnect(): void {
     if (this.socket) {
-      this.socket.close();
+      this.socket.close(1000, 'Intentional disconnect');
       this.socket = null;
+      this.messageQueue = [];
     }
   }
   
   public send(message: WebSocketMessage): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
+    } else if (this.isConnecting) {
+      // Queue message if still connecting
+      this.messageQueue.push(message);
     } else {
       console.error('Cannot send message, socket not connected');
+      // Maybe try to reconnect?
+      this.connect().then(() => {
+        this.send(message);
+      }).catch(error => {
+        console.error('Failed to reconnect:', error);
+      });
     }
   }
   
@@ -123,6 +142,21 @@ class WebSocketService {
         }
       }
     };
+  }
+  
+  public getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error' {
+    if (!this.socket) return 'disconnected';
+    
+    switch (this.socket.readyState) {
+      case WebSocket.CONNECTING:
+        return 'connecting';
+      case WebSocket.OPEN:
+        return 'connected';
+      case WebSocket.CLOSING:
+      case WebSocket.CLOSED:
+      default:
+        return 'disconnected';
+    }
   }
   
   private handleMessage(message: WebSocketMessage): void {

@@ -19,9 +19,23 @@ export interface GameState {
   };
   startedAt?: string;
   lastMoveAt?: string;
+  inCheck?: boolean;
+  checkSquare?: string;
+  drawOffer?: {
+    offeredBy: 'w' | 'b';
+    offeredAt: string;
+  };
 }
 
-export async function createGame(mode: string, options?: any): Promise<GameState> {
+export interface GameOptions {
+  timeControl?: string; // e.g. "10+0", "5+3"
+  color?: 'random' | 'white' | 'black';
+  rated?: boolean;
+  friendId?: string;
+  aiLevel?: number;
+}
+
+export async function createGame(mode: string, options?: GameOptions): Promise<GameState> {
   // TODO: Implement actual API call
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -36,12 +50,13 @@ export async function createGame(mode: string, options?: any): Promise<GameState
           rating: 1200
         },
         blackPlayer: {
-          id: 'user_2',
-          name: 'Opponent',
+          id: mode === 'ai' ? 'ai_1' : 'user_2',
+          name: mode === 'ai' ? 'AI (Level ' + (options?.aiLevel || 3) + ')' : 'Opponent',
           rating: 1250
         },
         startedAt: new Date().toISOString(),
-        lastMoveAt: new Date().toISOString()
+        lastMoveAt: new Date().toISOString(),
+        inCheck: false
       });
     }, 500);
   });
@@ -67,7 +82,8 @@ export async function getGame(gameId: string): Promise<GameState> {
           rating: 1250
         },
         startedAt: new Date(Date.now() - 5000).toISOString(),
-        lastMoveAt: new Date().toISOString()
+        lastMoveAt: new Date().toISOString(),
+        inCheck: false
       });
     }, 200);
   });
@@ -82,6 +98,70 @@ export async function makeMove(gameId: string, move: string): Promise<GameState>
         fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2',
         moves: ['e4', 'e5'],
         timers: { w: 595, b: 598 },
+        whitePlayer: {
+          id: 'user_1',
+          name: 'You',
+          rating: 1200
+        },
+        blackPlayer: {
+          id: 'user_2',
+          name: 'Opponent',
+          rating: 1250
+        },
+        startedAt: new Date(Date.now() - 5000).toISOString(),
+        lastMoveAt: new Date().toISOString(),
+        inCheck: false
+      });
+    }, 100);
+  });
+}
+
+export async function resignGame(gameId: string): Promise<GameState> {
+  // TODO: Implement actual API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: gameId,
+        fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2',
+        moves: ['e4', 'e5'],
+        timers: { w: 595, b: 598 },
+        result: '0-1', // Assuming the current player (white) resigned
+        whitePlayer: {
+          id: 'user_1',
+          name: 'You',
+          rating: 1200
+        },
+        blackPlayer: {
+          id: 'user_2',
+          name: 'Opponent',
+          rating: 1250
+        },
+        startedAt: new Date(Date.now() - 5000).toISOString(),
+        lastMoveAt: new Date().toISOString()
+      });
+    }, 100);
+  });
+}
+
+export async function offerDraw(gameId: string): Promise<boolean> {
+  // TODO: Implement actual API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 100);
+  });
+}
+
+export async function acceptDraw(gameId: string): Promise<GameState> {
+  // TODO: Implement actual API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: gameId,
+        fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2',
+        moves: ['e4', 'e5'],
+        timers: { w: 595, b: 598 },
+        result: '½-½',
         whitePlayer: {
           id: 'user_1',
           name: 'You',

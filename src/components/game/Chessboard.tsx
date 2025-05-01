@@ -8,6 +8,8 @@ interface ChessboardProps {
   selectedSquare?: string | null;
   legalMoves?: string[];
   onSquareClick?: (square: string) => void;
+  inCheck?: boolean;
+  checkSquare?: string;
 }
 
 const ChessboardComponent: React.FC<ChessboardProps> = ({
@@ -16,7 +18,9 @@ const ChessboardComponent: React.FC<ChessboardProps> = ({
   lastMove,
   selectedSquare,
   legalMoves = [],
-  onSquareClick
+  onSquareClick,
+  inCheck = false,
+  checkSquare = null
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -48,15 +52,14 @@ const ChessboardComponent: React.FC<ChessboardProps> = ({
     return board;
   };
 
-  // Check if the current position is in check
-  const isInCheck = (fen: string) => {
+  // Determine if the current position is in check
+  const determineCheckSquare = (fen: string) => {
     // In a real app, this would be determined by chess logic
-    // For now, we'll assume not in check
-    return false;
+    // For now, we'll use the passed checkSquare prop
+    return checkSquare;
   };
 
   const board = parseFen(fen);
-  const inCheck = isInCheck(fen);
 
   // Determine if board should be flipped (black's perspective)
   const isFlipped = playerColor === 'b';
@@ -111,11 +114,13 @@ const ChessboardComponent: React.FC<ChessboardProps> = ({
     }
   };
 
-  // Determine if a square is selected, a legal move, or part of the last move
+  // Determine if a square is selected, a legal move, part of the last move, or in check
   const getSquareHighlight = (file: string, rank: string) => {
     const square = `${file}${rank}`;
     
-    if (selectedSquare === square) {
+    if (inCheck && square === checkSquare) {
+      return 'check';
+    } else if (selectedSquare === square) {
       return 'selected';
     } else if (legalMoves?.includes(square)) {
       return 'legal-move';
@@ -136,16 +141,13 @@ const ChessboardComponent: React.FC<ChessboardProps> = ({
           displayFiles.map((file, fileIndex) => {
             const isDark = (rankIndex + fileIndex) % 2 === 1;
             const squareName = `${file}${rank}`;
-            const pieceIndex = isFlipped 
-              ? (7 - rankIndex) * 8 + fileIndex
-              : rankIndex * 8 + (isFlipped ? (7 - fileIndex) : fileIndex);
+            const highlight = getSquareHighlight(file, rank);
             
             // Map to the correct piece in the board array
             const rowIndex = 7 - parseInt(rank) + 1;
             const colIndex = file.charCodeAt(0) - 97; // 'a' is 97 in ASCII
             
             const piece = board[rowIndex]?.[colIndex] ?? null;
-            const highlight = getSquareHighlight(file, rank);
 
             return (
               <div
@@ -156,7 +158,8 @@ const ChessboardComponent: React.FC<ChessboardProps> = ({
                   highlight === 'selected' && "bg-chess-accent/50",
                   highlight === 'legal-move' && "after:absolute after:w-1/3 after:h-1/3 after:rounded-full after:bg-chess-accent/40",
                   highlight === 'last-move' && "bg-chess-accent/20",
-                  "hover:brightness-95"
+                  highlight === 'check' && "bg-red-500/30",
+                  "hover:brightness-90 transition-all"
                 )}
                 onClick={() => handleSquareClick(squareName)}
               >

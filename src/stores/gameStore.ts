@@ -18,6 +18,12 @@ interface GameStore {
   setLegalMoves: (moves: string[]) => void;
   lastMove: GameSquare | null;
   setLastMove: (move: GameSquare | null) => void;
+  inCheck: boolean;
+  setInCheck: (inCheck: boolean) => void;
+  checkSquare: string | null;
+  setCheckSquare: (square: string | null) => void;
+  boardOrientation: 'white' | 'black';
+  flipBoard: () => void;
 }
 
 const useGameStore = create<GameStore>((set) => ({
@@ -31,6 +37,14 @@ const useGameStore = create<GameStore>((set) => ({
   setLegalMoves: (moves) => set({ legalMoves: moves }),
   lastMove: null,
   setLastMove: (move) => set({ lastMove: move }),
+  inCheck: false,
+  setInCheck: (inCheck) => set({ inCheck }),
+  checkSquare: null,
+  setCheckSquare: (square) => set({ checkSquare: square }),
+  boardOrientation: 'white',
+  flipBoard: () => set((state) => ({ 
+    boardOrientation: state.boardOrientation === 'white' ? 'black' : 'white' 
+  })),
 }));
 
 export default useGameStore;
