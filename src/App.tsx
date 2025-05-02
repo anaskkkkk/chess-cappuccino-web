@@ -36,6 +36,10 @@ import GameManagement from "./pages/admin/GameManagement";
 import TournamentManager from "./pages/admin/TournamentManager";
 import CoursesCMS from "./pages/admin/CoursesCMS";
 import PuzzlesCMS from "./pages/admin/PuzzlesCMS";
+import PuzzleManagement from "./pages/admin/PuzzleManagement";
+import ContentPages from "./pages/admin/ContentPages";
+import OrdersPayments from "./pages/admin/OrdersPayments";
+import SmartBoardFleet from "./pages/admin/SmartBoardFleet";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -85,12 +89,12 @@ const AppRoutes = () => {
         <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
         <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
         <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
-        <Route path="/admin/puzzles" element={<AdminLayout><PuzzlesCMS /></AdminLayout>} />
+        <Route path="/admin/puzzles" element={<AdminLayout><PuzzleManagement /></AdminLayout>} />
+        <Route path="/admin/content" element={<AdminLayout><ContentPages /></AdminLayout>} />
+        <Route path="/admin/orders" element={<AdminLayout><OrdersPayments /></AdminLayout>} />
+        <Route path="/admin/smartboards" element={<AdminLayout><SmartBoardFleet /></AdminLayout>} />
         
-        {/* Other admin routes - placeholder components */}
-        <Route path="/admin/content" element={<AdminLayout><div className="p-6 text-chess-text-light">Content Pages Builder</div></AdminLayout>} />
-        <Route path="/admin/orders" element={<AdminLayout><div className="p-6 text-chess-text-light">Orders & Payments Management</div></AdminLayout>} />
-        <Route path="/admin/smartboards" element={<AdminLayout><div className="p-6 text-chess-text-light">SmartBoard Fleet Management</div></AdminLayout>} />
+        {/* Other admin routes - placeholder components for now */}
         <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
         <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
         <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
@@ -103,6 +107,7 @@ const AppRoutes = () => {
         <Route path="/admin/integrations" element={<AdminLayout><div className="p-6 text-chess-text-light">Integrations Management</div></AdminLayout>} />
         <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
         <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
+        <Route path="/admin/profile" element={<AdminLayout><div className="p-6 text-chess-text-light">Admin Profile</div></AdminLayout>} />
         
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
