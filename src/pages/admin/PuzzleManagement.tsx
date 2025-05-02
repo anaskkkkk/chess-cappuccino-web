@@ -39,6 +39,18 @@ import { BookCopy, Filter, Plus, Search, Trash, PenLine } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { learningApi } from "@/services/api/apiEndpoints";
 
+// Define puzzle interface for better type safety
+interface Puzzle {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  category: string;
+  fen: string;
+  solution: string;
+  rating: number;
+}
+
 // Form validation schema for puzzle
 const puzzleFormSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
@@ -53,7 +65,7 @@ const puzzleFormSchema = z.object({
 type PuzzleFormValues = z.infer<typeof puzzleFormSchema>;
 
 // Mock puzzle data for UI development
-const mockPuzzles = [
+const mockPuzzles: Puzzle[] = [
   { id: "p1", title: "Knight Fork", description: "Find the knight fork", difficulty: "easy", category: "tactics", fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1", solution: "Nxe5", rating: 1200 },
   { id: "p2", title: "Queen Sacrifice", description: "Sacrifice the queen for checkmate", difficulty: "hard", category: "checkmate", fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1", solution: "Qxf7+", rating: 1800 },
   { id: "p3", title: "Double Check", description: "Deliver a double check", difficulty: "medium", category: "tactics", fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1", solution: "Ng5+", rating: 1500 }
@@ -61,10 +73,10 @@ const mockPuzzles = [
 
 const PuzzleManagement = () => {
   const { t } = useLanguageContext();
-  const [puzzles, setPuzzles] = useState(mockPuzzles);
+  const [puzzles, setPuzzles] = useState<Puzzle[]>(mockPuzzles);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentPuzzle, setCurrentPuzzle] = useState<any>(null);
+  const [currentPuzzle, setCurrentPuzzle] = useState<Puzzle | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
   
@@ -83,7 +95,7 @@ const PuzzleManagement = () => {
   });
 
   // TODO: API - Fetch puzzles
-  const fetchPuzzles = async () => {
+  const fetchPuzzles = async (): Promise<Puzzle[]> => {
     try {
       // TODO: Replace with actual API call
       // const response = await learningApi.getPuzzles();
@@ -116,7 +128,7 @@ const PuzzleManagement = () => {
   }, [puzzlesData]);
 
   // Edit puzzle
-  const handleEditPuzzle = (puzzle: any) => {
+  const handleEditPuzzle = (puzzle: Puzzle) => {
     setCurrentPuzzle(puzzle);
     form.reset({
       title: puzzle.title,
@@ -176,9 +188,14 @@ const PuzzleManagement = () => {
         // const newPuzzle = await learningApi.createPuzzle(data);
         
         // Mock a new puzzle for UI
-        const newPuzzle = {
+        const newPuzzle: Puzzle = {
           id: `p${puzzles.length + 1}`,
-          ...data,
+          title: data.title,
+          description: data.description,
+          difficulty: data.difficulty,
+          category: data.category,
+          fen: data.fen,
+          solution: data.solution,
           rating: Number(data.rating)
         };
         

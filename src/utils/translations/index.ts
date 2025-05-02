@@ -1,10 +1,11 @@
 
 // Main exports for the translation system
 
-// Export specific elements from their respective files
-export { TranslationRecord, Translations } from './types';
+// Export types properly
+export type { TranslationRecord, Translations } from './types';
+// Export values
 export { translations } from './registry';
-export { TranslationKey } from './registry';
+export type { TranslationKey } from './registry';
 export * from './hooks';
 export { enTranslations } from './en';
 export { arTranslations } from './ar';

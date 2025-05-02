@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -62,8 +63,23 @@ const pageFormSchema = z.object({
 
 type PageFormValues = z.infer<typeof pageFormSchema>;
 
+// Define ContentPage interface for better type safety
+interface ContentPage {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  metaTitle: string;
+  metaDescription: string;
+  status: string;
+  language: string;
+  requiresAuth: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Mock data for UI development
-const mockPages = [
+const mockPages: ContentPage[] = [
   { 
     id: "page1", 
     title: "How to Play Chess", 
@@ -107,10 +123,10 @@ const mockPages = [
 
 const ContentPages = () => {
   const { t } = useLanguageContext();
-  const [pages, setPages] = useState(mockPages);
+  const [pages, setPages] = useState<ContentPage[]>(mockPages);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState<ContentPage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [previewContent, setPreviewContent] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -131,7 +147,7 @@ const ContentPages = () => {
   });
 
   // TODO: API - Fetch pages
-  const fetchPages = async () => {
+  const fetchPages = async (): Promise<ContentPage[]> => {
     try {
       // TODO: Replace with actual API call
       // const response = await contentApi.getPages();
@@ -157,7 +173,7 @@ const ContentPages = () => {
   });
 
   // Edit page
-  const handleEditPage = (page: any) => {
+  const handleEditPage = (page: ContentPage) => {
     setCurrentPage(page);
     form.reset({
       title: page.title,
@@ -224,9 +240,16 @@ const ContentPages = () => {
         // const newPage = await contentApi.createPage(data);
         
         // Mock a new page for UI
-        const newPage = {
+        const newPage: ContentPage = {
           id: `page${pages.length + 1}`,
-          ...data,
+          title: data.title,
+          slug: data.slug,
+          content: data.content,
+          metaTitle: data.metaTitle || "",
+          metaDescription: data.metaDescription || "",
+          status: data.status,
+          language: data.language,
+          requiresAuth: data.requiresAuth,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -797,7 +820,7 @@ const ContentPages = () => {
                   <TableRow key={page.id}>
                     <TableCell className="font-medium flex items-center">
                       {page.requiresAuth && (
-                        <Info className="h-4 w-4 mr-2 text-amber-500" title="Requires Authentication" />
+                        <Info className="h-4 w-4 mr-2 text-amber-500" aria-label="Requires Authentication" />
                       )}
                       {page.title}
                     </TableCell>
