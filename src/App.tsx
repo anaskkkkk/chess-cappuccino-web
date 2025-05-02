@@ -40,6 +40,7 @@ import PuzzleManagement from "./pages/admin/PuzzleManagement";
 import ContentPages from "./pages/admin/ContentPages";
 import OrdersPayments from "./pages/admin/OrdersPayments";
 import SmartBoardFleet from "./pages/admin/SmartBoardFleet";
+import LocalizationManagement from "./pages/admin/LocalizationManagement";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -93,12 +94,12 @@ const AppRoutes = () => {
         <Route path="/admin/content" element={<AdminLayout><ContentPages /></AdminLayout>} />
         <Route path="/admin/orders" element={<AdminLayout><OrdersPayments /></AdminLayout>} />
         <Route path="/admin/smartboards" element={<AdminLayout><SmartBoardFleet /></AdminLayout>} />
+        <Route path="/admin/localization" element={<AdminLayout><LocalizationManagement /></AdminLayout>} />
         
-        {/* Other admin routes - placeholder components for now */}
+        {/* Other admin routes */}
         <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
         <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
         <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
-        <Route path="/admin/localization" element={<AdminLayout><div className="p-6 text-chess-text-light">Localization Management</div></AdminLayout>} />
         <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
         <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
         <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
