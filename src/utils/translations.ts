@@ -106,7 +106,7 @@ export const translations: Translations = {
     "System Health": "System Health",
     "Backup & Restore": "Backup & Restore",
     "Integrations": "Integrations",
-    "Feature Flags": "Feature Flags", 
+    "Feature Flags": "Feature Flags", // Ensuring this is a string
     "Help & Support": "Help & Support"
   },
   ar: {
@@ -205,7 +205,7 @@ export const translations: Translations = {
     "System Health": "صحة النظام",
     "Backup & Restore": "النسخ الاحتياطي والاستعادة",
     "Integrations": "التكاملات",
-    "Feature Flags": "ميزات التجريبية", 
+    "Feature Flags": "ميزات التجريبية", // Ensuring this is a string in the Arabic section too
     "Help & Support": "المساعدة والدعم"
   }
 };
