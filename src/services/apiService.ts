@@ -1,3 +1,4 @@
+
 import { 
   userApi,
   gameApi,
@@ -8,7 +9,8 @@ import {
   adminApi,
   contentApi,
   translationApi,
-  analyticsApi
+  analyticsApi,
+  websocketApi
 } from './api/apiEndpoints';
 import { GameOptions, GameState } from './gameService';
 
@@ -66,7 +68,8 @@ class ApiService {
   //==========================================================================
   
   async getLeaderboard(timeframe = 'monthly', page = 1, limit = 10) {
-    return userApi.getAllUsers(page, limit, { sortBy: 'rating', timeframe });
+    // Fixed the type error - passing timeframe as a search parameter instead of an object
+    return userApi.getAllUsers(page, limit, `sortBy=rating&timeframe=${timeframe}`);
   }
   
   //==========================================================================
@@ -145,8 +148,7 @@ class ApiService {
   //==========================================================================
   
   async getWebSocketToken() {
-    // Mock implementation until we have a real endpoint
-    return { token: "mock-websocket-token-" + Date.now() };
+    return websocketApi.getAuthToken();
   }
 }
 
