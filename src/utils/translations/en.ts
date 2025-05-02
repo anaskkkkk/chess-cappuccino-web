@@ -1,0 +1,104 @@
+
+// English translations
+
+import { TranslationRecord } from './types';
+
+export const enTranslations: TranslationRecord = {
+  // Common
+  appName: "Smart Chess",
+  loading: "Loading...",
+  submit: "Submit",
+  cancel: "Cancel",
+  save: "Save",
+  delete: "Delete",
+  edit: "Edit",
+  yes: "Yes",
+  no: "No",
+  search: "Search",
+  
+  // Auth
+  signIn: "Sign In",
+  signUp: "Sign Up",
+  signOut: "Sign Out",
+  email: "Email",
+  password: "Password",
+  confirmPassword: "Confirm Password",
+  forgotPassword: "Forgot Password?",
+  
+  // Navigation
+  play: "Play",
+  learn: "Learn",
+  community: "Community",
+  smartBoard: "SmartBoard",
+  store: "Store",
+  
+  // Game
+  quickPlay: "Quick Play",
+  playWithFriend: "Play with Friend",
+  playWithAI: "Play with AI",
+  tournaments: "Tournaments",
+  analysis: "Analysis",
+  spectate: "Spectate",
+  findMatch: "Find Match",
+  createGame: "Create Game",
+  joinTournament: "Join Tournament",
+  watchLive: "Watch Live",
+  resign: "Resign",
+  offerDraw: "Offer Draw",
+  flipBoard: "Flip Board",
+  checkmate: "Checkmate",
+  stalemate: "Stalemate",
+  check: "Check",
+  white: "White",
+  black: "Black",
+  draw: "Draw",
+  victory: "Victory",
+  defeat: "Defeat",
+  
+  // Board Status
+  boardStatus: "Board Status",
+  boardOnline: "Board Online",
+  boardOffline: "Board Offline",
+  
+  // Pages
+  homepage: "Homepage",
+  dashboard: "Dashboard",
+  profile: "Profile",
+  settings: "Settings",
+  help: "Help",
+  faq: "FAQ",
+  
+  // Message
+  findingMatch: "Finding Match...",
+  
+  // Admin sections
+  Core: "Core",
+  Content: "Content",
+  Business: "Business",
+  Hardware: "Hardware",
+  Monitoring: "Monitoring",
+  Settings: "Settings",
+  
+  // Admin pages
+  "Dashboard": "Dashboard",
+  "User Management": "User Management",
+  "Game Management": "Game Management",
+  "Tournament Manager": "Tournament Manager",
+  "Courses": "Courses",
+  "Puzzles": "Puzzles",
+  "Content Pages": "Content Pages",
+  "Orders & Payments": "Orders & Payments",
+  "SmartBoard Fleet": "SmartBoard Fleet",
+  "Real-Time Logs": "Real-Time Logs", 
+  "Notifications": "Notifications",
+  "Analytics": "Analytics",
+  "Localization": "Localization",
+  "Sound & Assets": "Sound & Assets",
+  "Roles & Permissions": "Roles & Permissions",
+  "Security & Audit": "Security & Audit",
+  "System Health": "System Health",
+  "Backup & Restore": "Backup & Restore",
+  "Integrations": "Integrations",
+  "Feature Flags": "Feature Flags",
+  "Help & Support": "Help & Support"
+};
