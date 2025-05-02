@@ -8,7 +8,6 @@ import {
   adminApi,
   contentApi,
   translationApi,
-  websocketApi,
   analyticsApi
 } from './api/apiEndpoints';
 import { GameOptions, GameState } from './gameService';
@@ -67,7 +66,7 @@ class ApiService {
   //==========================================================================
   
   async getLeaderboard(timeframe = 'monthly', page = 1, limit = 10) {
-    return userApi.getAllUsers(page, limit, '', { sortBy: 'rating', timeframe });
+    return userApi.getAllUsers(page, limit, { sortBy: 'rating', timeframe });
   }
   
   //==========================================================================
@@ -146,7 +145,8 @@ class ApiService {
   //==========================================================================
   
   async getWebSocketToken() {
-    return websocketApi.getAuthToken();
+    // Mock implementation until we have a real endpoint
+    return { token: "mock-websocket-token-" + Date.now() };
   }
 }
 

@@ -1,4 +1,3 @@
-
 import apiService from './apiService';
 
 export enum WebSocketMessageType {
@@ -29,7 +28,7 @@ type ErrorHandler = (event: Event) => void;
 
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private messageHandlers: Map<WebSocketMessageType, Set<MessageHandler>> = new Map();
+  private messageHandlers: Map<WebSocketMessageType | string, Set<MessageHandler>> = new Map();
   private connectionHandlers: Set<ConnectionHandler> = new Set();
   private disconnectionHandlers: Set<ConnectionHandler> = new Set();
   private errorHandlers: Set<ErrorHandler> = new Set();
@@ -64,7 +63,7 @@ class WebSocketService {
 
     try {
       // Get fresh auth token for WebSocket connection
-      const response = await apiService.getWebSocketToken();
+      const response = await this.getWebSocketToken();
       this.authToken = response.token;
 
       // Connect to WebSocket server with auth token
@@ -172,20 +171,20 @@ class WebSocketService {
   /**
    * Send a message to the WebSocket server
    */
-  public sendMessage(type: WebSocketMessageType, payload: any): void {
+  public sendMessage(type: WebSocketMessageType | string, payload: any): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       console.error('WebSocket not connected');
       return;
     }
 
-    const message: WebSocketMessage = { type, payload };
+    const message: WebSocketMessage = { type: type as WebSocketMessageType, payload };
     this.socket.send(JSON.stringify(message));
   }
 
   /**
-   * Add a message handler
+   * Add a message handler and return a function to remove it
    */
-  public addMessageHandler(type: WebSocketMessageType, handler: MessageHandler): void {
+  public addMessageHandler(type: WebSocketMessageType | string, handler: MessageHandler): () => void {
     if (!this.messageHandlers.has(type)) {
       this.messageHandlers.set(type, new Set());
     }
@@ -194,12 +193,14 @@ class WebSocketService {
     if (handlers) {
       handlers.add(handler);
     }
+
+    return () => this.removeMessageHandler(type, handler);
   }
 
   /**
    * Remove a message handler
    */
-  public removeMessageHandler(type: WebSocketMessageType, handler: MessageHandler): void {
+  public removeMessageHandler(type: WebSocketMessageType | string, handler: MessageHandler): void {
     const handlers = this.messageHandlers.get(type);
     if (handlers) {
       handlers.delete(handler);
@@ -303,7 +304,8 @@ class WebSocketService {
    */
   private async getWebSocketToken() {
     try {
-      return await apiService.websocketApi.getAuthToken();
+      // Use direct apiService call instead of websocketApi
+      return await apiService.getWebSocketToken();
     } catch (error) {
       console.error('Error getting WebSocket token:', error);
       throw error;

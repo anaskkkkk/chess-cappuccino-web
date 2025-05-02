@@ -1,6 +1,6 @@
 
 import { useEffect, useCallback, useRef, useState } from 'react';
-import websocketService, { WebSocketMessage } from '../services/websocketService';
+import websocketService, { WebSocketMessage, WebSocketMessageType } from '../services/websocketService';
 
 interface UseWebSocketOptions {
   gameId?: string;
@@ -13,7 +13,7 @@ interface UseWebSocketOptions {
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 
 export function useWebSocket<T = any>(
-  eventType: string,
+  eventType: WebSocketMessageType | string,
   callback: (data: T) => void,
   options: UseWebSocketOptions = {}
 ) {
@@ -37,7 +37,9 @@ export function useWebSocket<T = any>(
   // Function to check connection status periodically
   useEffect(() => {
     const checkStatus = () => {
-      const currentStatus = websocketService.getConnectionStatus();
+      const currentStatus = websocketService.isConnected() 
+        ? 'connected' 
+        : 'disconnected';
       setStatus(currentStatus);
     };
     
@@ -84,13 +86,19 @@ export function useWebSocket<T = any>(
     }
     
     // Create new subscription
-    unsubscribeRef.current = websocketService.subscribe<T>(eventType, (data: T) => {
-      callbackRef.current(data);
-    });
+    unsubscribeRef.current = websocketService.addMessageHandler(
+      eventType as WebSocketMessageType, 
+      (message) => {
+        callbackRef.current(message.payload as T);
+      }
+    );
     
     return () => {
       if (unsubscribeRef.current) {
-        unsubscribeRef.current();
+        websocketService.removeMessageHandler(
+          eventType as WebSocketMessageType, 
+          unsubscribeRef.current
+        );
         unsubscribeRef.current = null;
       }
     };
@@ -99,7 +107,13 @@ export function useWebSocket<T = any>(
   const connect = useCallback(async () => {
     try {
       setStatus('connecting');
-      await websocketService.connect(gameId);
+      await websocketService.connect();
+      
+      // Join game room if gameId provided
+      if (gameId) {
+        websocketService.joinGame(gameId);
+      }
+      
       setStatus('connected');
       onOpen?.();
       return true;
@@ -120,10 +134,10 @@ export function useWebSocket<T = any>(
   const send = useCallback((message: WebSocketMessage) => {
     if (status !== 'connected') {
       connect().then(() => {
-        websocketService.send(message);
+        websocketService.sendMessage(message.type, message.payload);
       });
     } else {
-      websocketService.send(message);
+      websocketService.sendMessage(message.type, message.payload);
     }
   }, [connect, status]);
 

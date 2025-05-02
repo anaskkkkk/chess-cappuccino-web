@@ -1,4 +1,3 @@
-
 // Translations for multilingual support
 
 export type TranslationKey = keyof typeof translations['en'];

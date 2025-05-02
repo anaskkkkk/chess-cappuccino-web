@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import useWebSocket from '@/hooks/useWebSocket';
+import { WebSocketMessageType } from '@/services/websocketService';
 
 interface Message {
   id: string;
@@ -22,7 +23,7 @@ const GameChat: React.FC<GameChatProps> = ({ gameId }) => {
   
   // WebSocket connection for chat
   const { send } = useWebSocket<Message>(
-    'chat_message',
+    WebSocketMessageType.CHAT_MESSAGE,
     (message) => {
       setMessages(prev => [...prev, message]);
     },
@@ -40,7 +41,7 @@ const GameChat: React.FC<GameChatProps> = ({ gameId }) => {
     
     // Send message via WebSocket
     send({
-      type: 'chat_message',
+      type: WebSocketMessageType.CHAT_MESSAGE,
       payload: {
         gameId,
         text: inputValue

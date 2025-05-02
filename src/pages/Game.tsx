@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -10,11 +9,11 @@ import GameControls from '@/components/game/GameControls';
 import ResultModal from '@/components/game/ResultModal';
 import { GameState } from '@/services/gameService';
 import useWebSocket from '@/hooks/useWebSocket';
+import { WebSocketMessageType } from '@/services/websocketService';
 import { toast } from 'sonner';
 import useGameStore from '@/stores/gameStore';
-import { Loader2, RotateCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getGame } from '@/services/gameService';
-import { Button } from '@/components/ui/button';
 
 const Game = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -40,7 +39,7 @@ const Game = () => {
 
   // Connect to WebSocket for this game
   const { send } = useWebSocket<GameState>(
-    'game_update',
+    WebSocketMessageType.GAME_STATE,
     (data) => {
       console.log('Received game update:', data);
       setGameState(data);
@@ -142,7 +141,7 @@ const Game = () => {
     
     // Send move to server via WebSocket
     send({
-      type: 'make_move',
+      type: WebSocketMessageType.MOVE_MADE,
       payload: {
         gameId,
         move
@@ -268,16 +267,17 @@ const Game = () => {
 
   const handleResign = () => {
     send({
-      type: 'resign',
+      type: WebSocketMessageType.GAME_OVER,
       payload: {
-        gameId
+        gameId,
+        reason: 'resign'
       }
     });
   };
 
   const handleOfferDraw = () => {
     send({
-      type: 'offer_draw',
+      type: WebSocketMessageType.DRAW_OFFERED,
       payload: {
         gameId
       }
