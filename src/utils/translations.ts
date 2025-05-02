@@ -1,3 +1,4 @@
+
 // Translations for multilingual support
 
 export type TranslationKey = keyof typeof translations['en'];
@@ -105,7 +106,7 @@ export const translations: Translations = {
     "System Health": "System Health",
     "Backup & Restore": "Backup & Restore",
     "Integrations": "Integrations",
-    "Feature Flags": "Feature Flags", // Fixed: Ensuring this is explicitly a string type
+    "Feature Flags": "Feature Flags", 
     "Help & Support": "Help & Support"
   },
   ar: {
