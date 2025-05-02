@@ -205,7 +205,7 @@ export const translations: Translations = {
     "System Health": "صحة النظام",
     "Backup & Restore": "النسخ الاحتياطي والاستعادة",
     "Integrations": "التكاملات",
-    "Feature Flags": "ميزات التجريبية", // Ensuring this is a string in the Arabic section too
+    "Feature Flags": "ميزات التجريبية", // Ensuring this is a string in Arabic section too
     "Help & Support": "المساعدة والدعم"
   }
 };
