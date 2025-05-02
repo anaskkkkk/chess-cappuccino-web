@@ -35,6 +35,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import GameManagement from "./pages/admin/GameManagement";
 import TournamentManager from "./pages/admin/TournamentManager";
 import CoursesCMS from "./pages/admin/CoursesCMS";
+import PuzzlesCMS from "./pages/admin/PuzzlesCMS";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -84,9 +85,9 @@ const AppRoutes = () => {
         <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
         <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
         <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
+        <Route path="/admin/puzzles" element={<AdminLayout><PuzzlesCMS /></AdminLayout>} />
         
         {/* Other admin routes - placeholder components */}
-        <Route path="/admin/puzzles" element={<AdminLayout><div className="p-6 text-chess-text-light">Puzzles Content Management System</div></AdminLayout>} />
         <Route path="/admin/content" element={<AdminLayout><div className="p-6 text-chess-text-light">Content Pages Builder</div></AdminLayout>} />
         <Route path="/admin/orders" element={<AdminLayout><div className="p-6 text-chess-text-light">Orders & Payments Management</div></AdminLayout>} />
         <Route path="/admin/smartboards" element={<AdminLayout><div className="p-6 text-chess-text-light">SmartBoard Fleet Management</div></AdminLayout>} />
