@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from "@/components/ui/use-toast";
@@ -423,7 +424,7 @@ const SmartBoardFleet = () => {
                   <SelectValue placeholder={t("All statuses")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all_statuses">{t("All statuses")}</SelectItem>
+                  <SelectItem value="">{t("All statuses")}</SelectItem>
                   <SelectItem value="online">{t("Online")}</SelectItem>
                   <SelectItem value="offline">{t("Offline")}</SelectItem>
                   <SelectItem value="idle">{t("Idle")}</SelectItem>
@@ -761,4 +762,242 @@ const SmartBoardFleet = () => {
                     <div className="flex items-center">
                       <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
                         <div 
-                          className
+                          className="h-2.5 rounded-full bg-blue-500" 
+                          style={{ width: `${selectedBoard.wifiStrength}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">{selectedBoard.wifiStrength}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm text-gray-500">{t("Device Information")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <dl className="divide-y divide-gray-100">
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Serial Number")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.serialNumber}</dd>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Firmware")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.firmwareVersion}</dd>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("IP Address")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.ipAddress}</dd>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Location")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.location}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm text-gray-500">{t("Usage Statistics")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <dl className="divide-y divide-gray-100">
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Total Games")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.games}</dd>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Last Game ID")}:</dt>
+                        <dd className="col-span-2 text-gray-900">{selectedBoard.lastGameId}</dd>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                        <dt className="text-gray-500">{t("Paired")}:</dt>
+                        <dd className="col-span-2 text-gray-900">
+                          {selectedBoard.paired ? t("Yes") : t("No")}
+                        </dd>
+                      </div>
+                      {selectedBoard.paired && (
+                        <div className="grid grid-cols-3 gap-1 py-2 text-sm">
+                          <dt className="text-gray-500">{t("Paired With")}:</dt>
+                          <dd className="col-span-2 text-gray-900">
+                            {selectedBoard.pairedUserName} ({selectedBoard.pairedWith})
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleViewBoardLogs(selectedBoard.id)}
+                >
+                  <Terminal className="h-4 w-4 mr-2" />
+                  {t("View Logs")}
+                </Button>
+                
+                {selectedBoard.status !== 'offline' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleRemoteReset(selectedBoard.id)}
+                  >
+                    <Power className="h-4 w-4 mr-2" />
+                    {t("Remote Reset")}
+                  </Button>
+                )}
+                
+                {(selectedBoard.status !== 'offline' && selectedBoard.status !== 'updating') && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsOTADialogOpen(true);
+                      setIsBoardDetailsOpen(false);
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {t("Push OTA Update")}
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={() => setIsBoardDetailsOpen(false)}
+                >
+                  {t("Close")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Logs Dialog */}
+      <Dialog open={isLogsDialogOpen} onOpenChange={setIsLogsDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{t("Board Logs")}</DialogTitle>
+            <DialogDescription>
+              {selectedBoard && selectedBoard.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[400px] rounded-md border p-4">
+            <div className="space-y-3">
+              {selectedBoardLogs.length > 0 ? (
+                selectedBoardLogs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-2 rounded-md ${
+                      log.level === 'error' ? 'bg-red-50 border-l-4 border-red-500' : 
+                      log.level === 'warning' ? 'bg-amber-50 border-l-4 border-amber-500' : 
+                      'bg-gray-50 border-l-4 border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span 
+                        className={`text-xs font-medium ${
+                          log.level === 'error' ? 'text-red-800' : 
+                          log.level === 'warning' ? 'text-amber-800' : 
+                          'text-gray-800'
+                        }`}
+                      >
+                        {log.level.toUpperCase()}
+                      </span>
+                      <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
+                    </div>
+                    <p className="text-sm mt-1">{log.message}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  {t("No logs found for this board")}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLogsDialogOpen(false)}>
+              {t("Close")}
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              {t("Export Logs")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* OTA Update Dialog */}
+      <Dialog open={isOTADialogOpen} onOpenChange={setIsOTADialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t("Push OTA Update")}</DialogTitle>
+            <DialogDescription>
+              {selectedBoard && selectedBoard.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">{t("Current Firmware Version")}</h4>
+              <p className="text-sm">{selectedBoard && selectedBoard.firmwareVersion}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">{t("Select Target Version")}</h4>
+              <Select 
+                value={firmwareVersion}
+                onValueChange={setFirmwareVersion}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("Select version")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="v2.1.5">v2.1.5 (Stable)</SelectItem>
+                  <SelectItem value="v2.1.6">v2.1.6 (Beta)</SelectItem>
+                  <SelectItem value="v2.2.0">v2.2.0 (Development)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="rounded-md bg-amber-50 p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <Bell className="h-5 w-5 text-amber-400" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-amber-800">{t("Warning")}</h3>
+                  <div className="mt-2 text-sm text-amber-700">
+                    <p>
+                      {t("Updating firmware may temporarily disable the smart board. Ensure the board is not being used for an active game.")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOTADialogOpen(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button 
+              onClick={() => selectedBoard && handlePushOTA(selectedBoard.id, firmwareVersion)}
+              className="bg-amber-500 hover:bg-amber-600"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t("Start Update")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default SmartBoardFleet;
