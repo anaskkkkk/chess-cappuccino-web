@@ -1,313 +1,316 @@
 
+import apiService from './apiService';
+
+export enum WebSocketMessageType {
+  GAME_STATE = 'gameState',
+  CHAT_MESSAGE = 'chatMessage',
+  USER_JOINED = 'userJoined',
+  USER_LEFT = 'userLeft',
+  MOVE_MADE = 'moveMade',
+  GAME_OVER = 'gameOver',
+  DRAW_OFFERED = 'drawOffered',
+  DRAW_DECLINED = 'drawDeclined',
+  DRAW_ACCEPTED = 'drawAccepted',
+  TIME_UPDATE = 'timeUpdate',
+  TOURNAMENT_UPDATE = 'tournamentUpdate',
+  BOARD_STATUS = 'boardStatus',
+  NOTIFICATION = 'notification',
+  ERROR = 'error'
+}
+
 export interface WebSocketMessage {
-  type: string;
+  type: WebSocketMessageType;
   payload: any;
 }
 
+type MessageHandler = (message: WebSocketMessage) => void;
+type ConnectionHandler = () => void;
+type ErrorHandler = (event: Event) => void;
+
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private url: string;
+  private messageHandlers: Map<WebSocketMessageType, Set<MessageHandler>> = new Map();
+  private connectionHandlers: Set<ConnectionHandler> = new Set();
+  private disconnectionHandlers: Set<ConnectionHandler> = new Set();
+  private errorHandlers: Set<ErrorHandler> = new Set();
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 1000;
-  private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private reconnectTimeout: number = 3000;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isConnecting: boolean = false;
-  private messageQueue: WebSocketMessage[] = [];
-  private connectionPromise: Promise<void> | null = null;
-  
+  private wsUrl: string = '';
+  private authToken: string = '';
+
   constructor() {
-    // TODO: WebSocket API - Use environment variable for WebSocket URL
-    this.url = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/ws';
+    // Initialize WebSocket URL
+    this.wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/ws';
   }
-  
-  //==========================================================================
-  // CORE WEBSOCKET FUNCTIONALITY
-  //==========================================================================
-  
-  public connect(gameId?: string): Promise<void> {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      return Promise.resolve();
+
+  /**
+   * Connect to the WebSocket server
+   */
+  public async connect(): Promise<void> {
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+      console.log('WebSocket already connected or connecting');
+      return;
     }
-    
+
     if (this.isConnecting) {
-      return this.connectionPromise || Promise.resolve();
+      console.log('WebSocket connection already in progress');
+      return;
     }
-    
+
     this.isConnecting = true;
-    
-    this.connectionPromise = new Promise((resolve, reject) => {
-      try {
-        const token = localStorage.getItem('auth_token');
-        const wsUrl = gameId ? `${this.url}?gameId=${gameId}&token=${token}` : `${this.url}?token=${token}`;
-        
-        this.socket = new WebSocket(wsUrl);
-        
-        this.socket.onopen = () => {
-          console.log('WebSocket connection established');
-          this.reconnectAttempts = 0;
-          this.isConnecting = false;
-          
-          // Process any queued messages
-          while (this.messageQueue.length > 0) {
-            const message = this.messageQueue.shift();
-            if (message) this.send(message);
-          }
-          
-          resolve();
-          
-          // Send heartbeat every 30 seconds to keep connection alive
-          const heartbeatInterval = setInterval(() => {
-            if (this.socket?.readyState === WebSocket.OPEN) {
-              this.send({ type: 'heartbeat', payload: { timestamp: Date.now() } });
-            } else {
-              clearInterval(heartbeatInterval);
-            }
-          }, 30000);
-        };
-        
-        this.socket.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data) as WebSocketMessage;
-            this.handleMessage(message);
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
-        
-        this.socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          this.isConnecting = false;
-          reject(error);
-        };
-        
-        this.socket.onclose = (event) => {
-          console.log('WebSocket connection closed:', event.code, event.reason);
-          this.isConnecting = false;
-          this.connectionPromise = null;
-          
-          // Only try to reconnect if closure wasn't intentional (code 1000)
-          if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++;
-            const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1);
-            console.log(`Attempting to reconnect in ${delay}ms...`);
-            setTimeout(() => this.connect(gameId), delay);
-          } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error('Max reconnect attempts reached. Giving up.');
-          }
-        };
-      } catch (error) {
-        this.isConnecting = false;
-        this.connectionPromise = null;
-        console.error('Error creating WebSocket:', error);
-        reject(error);
+
+    try {
+      // Get fresh auth token for WebSocket connection
+      const response = await apiService.getWebSocketToken();
+      this.authToken = response.token;
+
+      // Connect to WebSocket server with auth token
+      this.socket = new WebSocket(`${this.wsUrl}?token=${this.authToken}`);
+      this.setupSocketListeners();
+    } catch (error) {
+      console.error('Failed to get WebSocket auth token:', error);
+      this.isConnecting = false;
+      this.handleReconnect();
+    }
+  }
+
+  /**
+   * Set up WebSocket event listeners
+   */
+  private setupSocketListeners(): void {
+    if (!this.socket) return;
+
+    this.socket.onopen = () => {
+      console.log('WebSocket connected');
+      this.isConnecting = false;
+      this.reconnectAttempts = 0;
+      this.connectionHandlers.forEach(handler => handler());
+    };
+
+    this.socket.onclose = (event) => {
+      console.log(`WebSocket disconnected: ${event.code} - ${event.reason}`);
+      this.isConnecting = false;
+      this.disconnectionHandlers.forEach(handler => handler());
+      
+      // Only attempt to reconnect if the close was not initiated by the client
+      if (event.code !== 1000) {
+        this.handleReconnect();
       }
-    });
-    
-    return this.connectionPromise;
-  }
-  
-  public disconnect(): void {
-    if (this.socket) {
-      this.socket.close(1000, 'Intentional disconnect');
-      this.socket = null;
-      this.messageQueue = [];
-    }
-  }
-  
-  public send(message: WebSocketMessage): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(message));
-    } else if (this.isConnecting) {
-      // Queue message if still connecting
-      this.messageQueue.push(message);
-    } else {
-      console.error('Cannot send message, socket not connected');
-      // Maybe try to reconnect?
-      this.connect().then(() => {
-        this.send(message);
-      }).catch(error => {
-        console.error('Failed to reconnect:', error);
-      });
-    }
-  }
-  
-  public subscribe<T>(eventType: string, callback: (data: T) => void): () => void {
-    if (!this.listeners.has(eventType)) {
-      this.listeners.set(eventType, new Set());
-    }
-    
-    this.listeners.get(eventType)!.add(callback as any);
-    
-    return () => {
-      const callbacks = this.listeners.get(eventType);
-      if (callbacks) {
-        callbacks.delete(callback as any);
-        if (callbacks.size === 0) {
-          this.listeners.delete(eventType);
-        }
+    };
+
+    this.socket.onerror = (event) => {
+      console.error('WebSocket error:', event);
+      this.isConnecting = false;
+      this.errorHandlers.forEach(handler => handler(event));
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data) as WebSocketMessage;
+        this.handleMessage(message);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
       }
     };
   }
-  
-  public getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error' {
-    if (!this.socket) return 'disconnected';
-    
-    switch (this.socket.readyState) {
-      case WebSocket.CONNECTING:
-        return 'connecting';
-      case WebSocket.OPEN:
-        return 'connected';
-      case WebSocket.CLOSING:
-      case WebSocket.CLOSED:
-      default:
-        return 'disconnected';
-    }
-  }
-  
+
+  /**
+   * Handle WebSocket message
+   */
   private handleMessage(message: WebSocketMessage): void {
-    const { type, payload } = message;
-    const callbacks = this.listeners.get(type);
-    
-    if (callbacks) {
-      callbacks.forEach(callback => callback(payload));
+    const handlers = this.messageHandlers.get(message.type);
+    if (handlers) {
+      handlers.forEach(handler => handler(message));
     }
   }
 
-  //==========================================================================
-  // GAME RELATED WEBSOCKET API CALLS
-  //==========================================================================
+  /**
+   * Handle reconnection logic
+   */
+  private handleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Max reconnect attempts reached');
+      return;
+    }
 
-  // TODO: WebSocket API - Join game
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+
+    this.reconnectAttempts++;
+    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${this.reconnectTimeout / 1000}s`);
+    
+    this.reconnectTimer = setTimeout(() => {
+      this.connect();
+    }, this.reconnectTimeout);
+    
+    // Exponential backoff
+    this.reconnectTimeout = Math.min(30000, this.reconnectTimeout * 1.5);
+  }
+
+  /**
+   * Disconnect from the WebSocket server
+   */
+  public disconnect(): void {
+    if (this.socket) {
+      this.socket.close(1000, 'Client disconnected');
+      this.socket = null;
+    }
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    this.reconnectAttempts = 0;
+    this.reconnectTimeout = 3000;
+  }
+
+  /**
+   * Send a message to the WebSocket server
+   */
+  public sendMessage(type: WebSocketMessageType, payload: any): void {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket not connected');
+      return;
+    }
+
+    const message: WebSocketMessage = { type, payload };
+    this.socket.send(JSON.stringify(message));
+  }
+
+  /**
+   * Add a message handler
+   */
+  public addMessageHandler(type: WebSocketMessageType, handler: MessageHandler): void {
+    if (!this.messageHandlers.has(type)) {
+      this.messageHandlers.set(type, new Set());
+    }
+
+    const handlers = this.messageHandlers.get(type);
+    if (handlers) {
+      handlers.add(handler);
+    }
+  }
+
+  /**
+   * Remove a message handler
+   */
+  public removeMessageHandler(type: WebSocketMessageType, handler: MessageHandler): void {
+    const handlers = this.messageHandlers.get(type);
+    if (handlers) {
+      handlers.delete(handler);
+    }
+  }
+
+  /**
+   * Add a connection handler
+   */
+  public onConnect(handler: ConnectionHandler): void {
+    this.connectionHandlers.add(handler);
+  }
+
+  /**
+   * Remove a connection handler
+   */
+  public offConnect(handler: ConnectionHandler): void {
+    this.connectionHandlers.delete(handler);
+  }
+
+  /**
+   * Add a disconnection handler
+   */
+  public onDisconnect(handler: ConnectionHandler): void {
+    this.disconnectionHandlers.add(handler);
+  }
+
+  /**
+   * Remove a disconnection handler
+   */
+  public offDisconnect(handler: ConnectionHandler): void {
+    this.disconnectionHandlers.delete(handler);
+  }
+
+  /**
+   * Add an error handler
+   */
+  public onError(handler: ErrorHandler): void {
+    this.errorHandlers.add(handler);
+  }
+
+  /**
+   * Remove an error handler
+   */
+  public offError(handler: ErrorHandler): void {
+    this.errorHandlers.delete(handler);
+  }
+
+  /**
+   * Check if WebSocket is connected
+   */
+  public isConnected(): boolean {
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * Join a game room
+   */
   public joinGame(gameId: string): void {
-    this.send({
-      type: 'join_game',
-      payload: { gameId }
-    });
+    this.sendMessage(WebSocketMessageType.USER_JOINED, { gameId });
   }
-  
-  // TODO: WebSocket API - Make move
-  public makeMove(gameId: string, move: string): void {
-    this.send({
-      type: 'make_move',
-      payload: { gameId, move }
-    });
+
+  /**
+   * Leave a game room
+   */
+  public leaveGame(gameId: string): void {
+    this.sendMessage(WebSocketMessageType.USER_LEFT, { gameId });
   }
-  
-  // TODO: WebSocket API - Resign game
-  public resignGame(gameId: string): void {
-    this.send({
-      type: 'resign',
-      payload: { gameId }
-    });
-  }
-  
-  // TODO: WebSocket API - Offer draw
-  public offerDraw(gameId: string): void {
-    this.send({
-      type: 'offer_draw',
-      payload: { gameId }
-    });
-  }
-  
-  // TODO: WebSocket API - Accept draw
-  public acceptDraw(gameId: string): void {
-    this.send({
-      type: 'accept_draw',
-      payload: { gameId }
-    });
-  }
-  
-  // TODO: WebSocket API - Decline draw
-  public declineDraw(gameId: string): void {
-    this.send({
-      type: 'decline_draw',
-      payload: { gameId }
-    });
-  }
-  
-  //==========================================================================
-  // CHAT RELATED WEBSOCKET API CALLS
-  //==========================================================================
-  
-  // TODO: WebSocket API - Send chat message
+
+  /**
+   * Send a chat message
+   */
   public sendChatMessage(gameId: string, message: string): void {
-    this.send({
-      type: 'chat_message',
-      payload: { gameId, message }
-    });
+    this.sendMessage(WebSocketMessageType.CHAT_MESSAGE, { gameId, message });
   }
-  
-  //==========================================================================
-  // TAKEBACK RELATED WEBSOCKET API CALLS
-  //==========================================================================
-  
-  // TODO: WebSocket API - Request takeback
-  public requestTakeback(gameId: string): void {
-    this.send({
-      type: 'request_takeback',
-      payload: { gameId }
-    });
+
+  /**
+   * Make a move in a game
+   */
+  public makeMove(gameId: string, move: any): void {
+    this.sendMessage(WebSocketMessageType.MOVE_MADE, { gameId, move });
   }
-  
-  // TODO: WebSocket API - Respond to takeback request
-  public respondToTakeback(gameId: string, accept: boolean): void {
-    this.send({
-      type: 'takeback_response',
-      payload: { gameId, accept }
-    });
+
+  /**
+   * Offer a draw in a game
+   */
+  public offerDraw(gameId: string): void {
+    this.sendMessage(WebSocketMessageType.DRAW_OFFERED, { gameId });
   }
-  
-  //==========================================================================
-  // CONNECTIVITY RELATED WEBSOCKET API CALLS
-  //==========================================================================
-  
-  // TODO: WebSocket API - Send ping
-  public sendPing(): void {
-    this.send({
-      type: 'ping',
-      payload: { timestamp: Date.now() }
-    });
+
+  /**
+   * Respond to a draw offer
+   */
+  public respondToDrawOffer(gameId: string, accept: boolean): void {
+    const responseType = accept ? WebSocketMessageType.DRAW_ACCEPTED : WebSocketMessageType.DRAW_DECLINED;
+    this.sendMessage(responseType, { gameId });
   }
-  
-  //==========================================================================
-  // SUBSCRIPTION RELATED WEBSOCKET API CALLS
-  //==========================================================================
-  
-  // TODO: WebSocket API - Subscribe to live games
-  public subscribeLiveGames(): void {
-    this.send({
-      type: 'subscribe_live_games',
-      payload: {}
-    });
-  }
-  
-  // TODO: WebSocket API - Subscribe to tournament updates
-  public subscribeTournament(tournamentId: string): void {
-    this.send({
-      type: 'subscribe_tournament',
-      payload: { tournamentId }
-    });
-  }
-  
-  //==========================================================================
-  // USER PRESENCE RELATED WEBSOCKET API CALLS
-  //==========================================================================
-  
-  // TODO: WebSocket API - Subscribe to user presence
-  public subscribeUserPresence(userId: string): void {
-    this.send({
-      type: 'subscribe_user_presence',
-      payload: { userId }
-    });
-  }
-  
-  // TODO: WebSocket API - Send user status
-  public sendUserStatus(status: 'online' | 'away' | 'busy' | 'offline'): void {
-    this.send({
-      type: 'user_status',
-      payload: { status }
-    });
+
+  /**
+   * Get WebSocket token
+   */
+  private async getWebSocketToken() {
+    try {
+      return await apiService.websocketApi.getAuthToken();
+    } catch (error) {
+      console.error('Error getting WebSocket token:', error);
+      throw error;
+    }
   }
 }
 
-export default new WebSocketService();
+// Export singleton instance
+const websocketService = new WebSocketService();
+export default websocketService;

@@ -5,7 +5,7 @@ export type TranslationKey = keyof typeof translations['en'];
 
 interface Translations {
   [key: string]: {
-    [key: string]: string;
+    [key: string]: string; // Only accepts string values
   };
 }
 
@@ -106,7 +106,7 @@ export const translations: Translations = {
     "System Health": "System Health",
     "Backup & Restore": "Backup & Restore",
     "Integrations": "Integrations",
-    "Feature Flags": "Feature Flags", // Fixed string type
+    "Feature Flags": "Feature Flags", // Ensuring this is a string type
     "Help & Support": "Help & Support"
   },
   ar: {
@@ -210,7 +210,7 @@ export const translations: Translations = {
   }
 };
 
-// Create a helper hook for accessing translations
+// Now let's enhance our translation system with remote fetching capability
 export const useTranslation = (language: string) => {
   const t = (key: TranslationKey): string => {
     const lang = language in translations ? language : 'en';
@@ -218,4 +218,62 @@ export const useTranslation = (language: string) => {
   };
 
   return { t };
+};
+
+// New function to fetch translations from remote server
+export const fetchRemoteTranslations = async (
+  language: string,
+  keys: string[]
+): Promise<Record<string, string>> => {
+  try {
+    // Make API call to fetch translations
+    const response = await fetch('/api/translations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        language,
+        keys,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch translations');
+    }
+
+    const data = await response.json();
+    return data.translations;
+  } catch (error) {
+    console.error('Error fetching translations:', error);
+    return {};
+  }
+};
+
+// Function to update translations dynamically
+export const updateTranslations = async (language: string): Promise<void> => {
+  try {
+    // Get all English keys
+    const englishKeys = Object.keys(translations.en);
+    
+    // Fetch translations for these keys
+    const remoteTranslations = await fetchRemoteTranslations(language, englishKeys);
+    
+    // Update the translations object with new values
+    if (Object.keys(remoteTranslations).length > 0) {
+      // Create language section if it doesn't exist
+      if (!translations[language]) {
+        translations[language] = { ...translations.en };
+      }
+      
+      // Update with fetched translations
+      Object.keys(remoteTranslations).forEach(key => {
+        if (key in translations.en) {
+          translations[language][key] = remoteTranslations[key];
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Failed to update translations:', error);
+  }
 };

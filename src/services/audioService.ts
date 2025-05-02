@@ -8,6 +8,12 @@ class AudioService {
   private errorSound: HTMLAudioElement | null = null;
   private gameStartSound: HTMLAudioElement | null = null;
   private gameEndSound: HTMLAudioElement | null = null;
+  private navigationSound: HTMLAudioElement | null = null;
+  private victorySound: HTMLAudioElement | null = null;
+  private defeatSound: HTMLAudioElement | null = null;
+  private drawSound: HTMLAudioElement | null = null;
+  private turnSound: HTMLAudioElement | null = null;
+  private timerWarningSound: HTMLAudioElement | null = null;
   
   private isMuted: boolean = false;
   
@@ -25,65 +31,97 @@ class AudioService {
       this.errorSound = new Audio('/sounds/error.mp3');
       this.gameStartSound = new Audio('/sounds/game-start.mp3');
       this.gameEndSound = new Audio('/sounds/game-end.mp3');
+      this.navigationSound = new Audio('/sounds/navigation.mp3');
+      this.victorySound = new Audio('/sounds/victory.mp3');
+      this.defeatSound = new Audio('/sounds/defeat.mp3');
+      this.drawSound = new Audio('/sounds/draw.mp3');
+      this.turnSound = new Audio('/sounds/turn.mp3');
+      this.timerWarningSound = new Audio('/sounds/timer-warning.mp3');
       
       // Preload sounds
-      this.moveSound.load();
-      this.captureSound.load();
-      this.checkSound.load();
-      this.notificationSound.load();
-      this.errorSound.load();
-      this.gameStartSound.load();
-      this.gameEndSound.load();
+      this.preloadSounds();
+    }
+  }
+  
+  private preloadSounds(): void {
+    const sounds = [
+      this.moveSound,
+      this.captureSound,
+      this.checkSound,
+      this.notificationSound,
+      this.errorSound,
+      this.gameStartSound,
+      this.gameEndSound,
+      this.navigationSound,
+      this.victorySound,
+      this.defeatSound,
+      this.drawSound,
+      this.turnSound,
+      this.timerWarningSound
+    ];
+    
+    sounds.forEach(sound => {
+      if (sound) sound.load();
+    });
+  }
+  
+  private playSound(sound: HTMLAudioElement | null): void {
+    if (!this.isMuted && sound) {
+      sound.currentTime = 0;
+      sound.play().catch(err => console.error(`Failed to play sound: ${err}`));
     }
   }
   
   public playMoveSound(): void {
-    if (!this.isMuted && this.moveSound) {
-      this.moveSound.currentTime = 0;
-      this.moveSound.play().catch(err => console.error('Failed to play move sound:', err));
-    }
+    this.playSound(this.moveSound);
   }
   
   public playCaptureSound(): void {
-    if (!this.isMuted && this.captureSound) {
-      this.captureSound.currentTime = 0;
-      this.captureSound.play().catch(err => console.error('Failed to play capture sound:', err));
-    }
+    this.playSound(this.captureSound);
   }
   
   public playCheckSound(): void {
-    if (!this.isMuted && this.checkSound) {
-      this.checkSound.currentTime = 0;
-      this.checkSound.play().catch(err => console.error('Failed to play check sound:', err));
-    }
+    this.playSound(this.checkSound);
   }
   
   public playNotificationSound(): void {
-    if (!this.isMuted && this.notificationSound) {
-      this.notificationSound.currentTime = 0;
-      this.notificationSound.play().catch(err => console.error('Failed to play notification sound:', err));
-    }
+    this.playSound(this.notificationSound);
   }
   
   public playErrorSound(): void {
-    if (!this.isMuted && this.errorSound) {
-      this.errorSound.currentTime = 0;
-      this.errorSound.play().catch(err => console.error('Failed to play error sound:', err));
-    }
+    this.playSound(this.errorSound);
   }
   
   public playGameStartSound(): void {
-    if (!this.isMuted && this.gameStartSound) {
-      this.gameStartSound.currentTime = 0;
-      this.gameStartSound.play().catch(err => console.error('Failed to play game start sound:', err));
-    }
+    this.playSound(this.gameStartSound);
   }
   
   public playGameEndSound(): void {
-    if (!this.isMuted && this.gameEndSound) {
-      this.gameEndSound.currentTime = 0;
-      this.gameEndSound.play().catch(err => console.error('Failed to play game end sound:', err));
-    }
+    this.playSound(this.gameEndSound);
+  }
+  
+  public playNavigationSound(): void {
+    this.playSound(this.navigationSound);
+  }
+  
+  public playVictorySound(): void {
+    this.playSound(this.victorySound);
+  }
+  
+  public playDefeatSound(): void {
+    this.playSound(this.defeatSound);
+  }
+  
+  public playDrawSound(): void {
+    this.playSound(this.drawSound);
+  }
+  
+  public playTurnSound(): void {
+    this.playSound(this.turnSound);
+  }
+  
+  public playTimerWarningSound(): void {
+    this.playSound(this.timerWarningSound);
   }
   
   public toggleMute(): boolean {

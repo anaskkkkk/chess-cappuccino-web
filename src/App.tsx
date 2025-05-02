@@ -36,68 +36,75 @@ import GameManagement from "./pages/admin/GameManagement";
 import TournamentManager from "./pages/admin/TournamentManager";
 import CoursesCMS from "./pages/admin/CoursesCMS";
 
-const queryClient = new QueryClient();
+// Create a new QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-// Wrap routes in PageTransition
+// Enhanced AppRoutes component with page transitions
 const AppRoutes = () => {
   const location = useLocation();
 
   return (
     <LanguageProvider>
-      <PageTransition>
-        <Routes location={location}>
-          <Route path="/" element={<Index />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/play" element={<Play />} />
-          <Route path="/game/:gameId" element={<Game />} />
-          <Route path="/learn" element={<Learn />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/smart-board" element={<SmartBoard />} />
-          <Route path="/accessories" element={<Accessories />} />
-          <Route path="/gift-cards" element={<GiftCards />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/puzzles" element={<Puzzles />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tournaments" element={<Tournaments />} />
-          <Route path="/tournaments/:tournamentId" element={<Tournaments />} />
-          <Route path="/analysis" element={<Analysis />} />
-          <Route path="/spectate" element={<Spectate />} />
-          <Route path="/spectate/game/:gameId" element={<Game />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-          <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
-          <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
-          <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
-          <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
-          
-          {/* Other admin routes - will add placeholder components as they're developed */}
-          <Route path="/admin/puzzles" element={<AdminLayout><div className="p-6 text-chess-text-light">Puzzles Content Management System</div></AdminLayout>} />
-          <Route path="/admin/content" element={<AdminLayout><div className="p-6 text-chess-text-light">Content Pages Builder</div></AdminLayout>} />
-          <Route path="/admin/orders" element={<AdminLayout><div className="p-6 text-chess-text-light">Orders & Payments Management</div></AdminLayout>} />
-          <Route path="/admin/smartboards" element={<AdminLayout><div className="p-6 text-chess-text-light">SmartBoard Fleet Management</div></AdminLayout>} />
-          <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
-          <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
-          <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
-          <Route path="/admin/localization" element={<AdminLayout><div className="p-6 text-chess-text-light">Localization Management</div></AdminLayout>} />
-          <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
-          <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
-          <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
-          <Route path="/admin/health" element={<AdminLayout><div className="p-6 text-chess-text-light">System Health Monitor</div></AdminLayout>} />
-          <Route path="/admin/backup" element={<AdminLayout><div className="p-6 text-chess-text-light">Backup & Restore</div></AdminLayout>} />
-          <Route path="/admin/integrations" element={<AdminLayout><div className="p-6 text-chess-text-light">Integrations Management</div></AdminLayout>} />
-          <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
-          <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </PageTransition>
+      <Routes location={location}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/store" element={<PageTransition><Store /></PageTransition>} />
+        <Route path="/play" element={<PageTransition><Play /></PageTransition>} />
+        <Route path="/game/:gameId" element={<PageTransition><Game /></PageTransition>} />
+        <Route path="/learn" element={<PageTransition><Learn /></PageTransition>} />
+        <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
+        <Route path="/smart-board" element={<PageTransition><SmartBoard /></PageTransition>} />
+        <Route path="/accessories" element={<PageTransition><Accessories /></PageTransition>} />
+        <Route path="/gift-cards" element={<PageTransition><GiftCards /></PageTransition>} />
+        <Route path="/courses" element={<PageTransition><Courses /></PageTransition>} />
+        <Route path="/puzzles" element={<PageTransition><Puzzles /></PageTransition>} />
+        <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
+        <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
+        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+        <Route path="/tournaments" element={<PageTransition><Tournaments /></PageTransition>} />
+        <Route path="/tournaments/:tournamentId" element={<PageTransition><Tournaments /></PageTransition>} />
+        <Route path="/analysis" element={<PageTransition><Analysis /></PageTransition>} />
+        <Route path="/spectate" element={<PageTransition><Spectate /></PageTransition>} />
+        <Route path="/spectate/game/:gameId" element={<PageTransition><Game /></PageTransition>} />
+        
+        {/* Admin Routes - no need to wrap content in PageTransition since AdminLayout already includes it */}
+        <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+        <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+        <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
+        <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
+        <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
+        
+        {/* Other admin routes - placeholder components */}
+        <Route path="/admin/puzzles" element={<AdminLayout><div className="p-6 text-chess-text-light">Puzzles Content Management System</div></AdminLayout>} />
+        <Route path="/admin/content" element={<AdminLayout><div className="p-6 text-chess-text-light">Content Pages Builder</div></AdminLayout>} />
+        <Route path="/admin/orders" element={<AdminLayout><div className="p-6 text-chess-text-light">Orders & Payments Management</div></AdminLayout>} />
+        <Route path="/admin/smartboards" element={<AdminLayout><div className="p-6 text-chess-text-light">SmartBoard Fleet Management</div></AdminLayout>} />
+        <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
+        <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
+        <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
+        <Route path="/admin/localization" element={<AdminLayout><div className="p-6 text-chess-text-light">Localization Management</div></AdminLayout>} />
+        <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
+        <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
+        <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
+        <Route path="/admin/health" element={<AdminLayout><div className="p-6 text-chess-text-light">System Health Monitor</div></AdminLayout>} />
+        <Route path="/admin/backup" element={<AdminLayout><div className="p-6 text-chess-text-light">Backup & Restore</div></AdminLayout>} />
+        <Route path="/admin/integrations" element={<AdminLayout><div className="p-6 text-chess-text-light">Integrations Management</div></AdminLayout>} />
+        <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
+        <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
+        
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
     </LanguageProvider>
   );
 };
