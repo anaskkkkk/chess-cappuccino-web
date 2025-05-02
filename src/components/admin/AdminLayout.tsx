@@ -27,7 +27,7 @@ import {
   Gamepad,
   Trophy,
   BookOpen,
-  PuzzlePiece,
+  BookCopy, // Replacing PuzzlePiece with BookCopy
   FileText,
   ShoppingCart,
   HardDrive,
@@ -76,7 +76,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       label: "Content",
       items: [
         { title: "Courses", path: "/admin/courses", icon: BookOpen },
-        { title: "Puzzles", path: "/admin/puzzles", icon: PuzzlePiece },
+        { title: "Puzzles", path: "/admin/puzzles", icon: BookCopy }, // Changed icon here
         { title: "Content Pages", path: "/admin/content", icon: FileText },
       ]
     },

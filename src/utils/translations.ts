@@ -106,7 +106,7 @@ export const translations: Translations = {
     "System Health": "System Health",
     "Backup & Restore": "Backup & Restore",
     "Integrations": "Integrations",
-    "Feature Flags": "Feature Flags",
+    "Feature Flags": "Feature Flags", // Fixed string type
     "Help & Support": "Help & Support"
   },
   ar: {
