@@ -115,9 +115,14 @@ const LocalizationManagement = () => {
     if (!searchTerm) return allTranslations;
     
     return allTranslations.filter(
-      ([key, value]) => 
-        key.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        value.toLowerCase().includes(searchTerm.toLowerCase())
+      ([key, value]) => {
+        // Fix: Add type checking before calling toLowerCase()
+        const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
+        const valueLower = typeof value === 'string' ? value.toLowerCase() : '';
+        const searchTermLower = searchTerm.toLowerCase();
+        
+        return keyLower.includes(searchTermLower) || valueLower.includes(searchTermLower);
+      }
     );
   };
   
@@ -220,7 +225,8 @@ const LocalizationManagement = () => {
                               />
                             ) : (
                               <span className={isRTL ? 'text-right block' : ''} dir={isRTL ? "rtl" : "ltr"}>
-                                {value}
+                                {/* Fix: Ensure value is string for React.ReactNode compatibility */}
+                                {typeof value === 'string' ? value : String(value)}
                               </span>
                             )}
                           </TableCell>
@@ -310,7 +316,7 @@ const LocalizationManagement = () => {
                               <span>
                                 {langCode === "en" ? "English" : 
                                  langCode === "ar" ? "Arabic (العربية)" : 
-                                 languages.find(l => l.code === langCode)?.name || langCode}
+                                 langCode}
                               </span>
                               {langCode === language && (
                                 <Badge variant="secondary" className="ml-2">Active</Badge>
