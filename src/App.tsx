@@ -41,6 +41,7 @@ import ContentPages from "./pages/admin/ContentPages";
 import OrdersPayments from "./pages/admin/OrdersPayments";
 import SmartBoardFleet from "./pages/admin/SmartBoardFleet";
 import LocalizationManagement from "./pages/admin/LocalizationManagement";
+import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -95,6 +96,7 @@ const AppRoutes = () => {
         <Route path="/admin/orders" element={<AdminLayout><OrdersPayments /></AdminLayout>} />
         <Route path="/admin/smartboards" element={<AdminLayout><SmartBoardFleet /></AdminLayout>} />
         <Route path="/admin/localization" element={<AdminLayout><LocalizationManagement /></AdminLayout>} />
+        <Route path="/admin/integrations" element={<AdminLayout><IntegrationsManagement /></AdminLayout>} />
         
         {/* Other admin routes */}
         <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
@@ -105,7 +107,6 @@ const AppRoutes = () => {
         <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
         <Route path="/admin/health" element={<AdminLayout><div className="p-6 text-chess-text-light">System Health Monitor</div></AdminLayout>} />
         <Route path="/admin/backup" element={<AdminLayout><div className="p-6 text-chess-text-light">Backup & Restore</div></AdminLayout>} />
-        <Route path="/admin/integrations" element={<AdminLayout><div className="p-6 text-chess-text-light">Integrations Management</div></AdminLayout>} />
         <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
         <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
         <Route path="/admin/profile" element={<AdminLayout><div className="p-6 text-chess-text-light">Admin Profile</div></AdminLayout>} />

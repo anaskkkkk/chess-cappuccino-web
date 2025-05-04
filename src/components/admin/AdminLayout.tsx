@@ -104,12 +104,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       label: "Settings",
       items: [
         { title: "Localization", path: "/admin/localization", icon: Languages },
+        { title: "Integrations", path: "/admin/integrations", icon: Plug },
         { title: "Sound & Assets", path: "/admin/assets", icon: Music },
         { title: "Roles & Permissions", path: "/admin/roles", icon: ShieldCheck },
         { title: "Security & Audit", path: "/admin/security", icon: Lock },
         { title: "System Health", path: "/admin/health", icon: Activity },
         { title: "Backup & Restore", path: "/admin/backup", icon: Save },
-        { title: "Integrations", path: "/admin/integrations", icon: Plug },
         { title: "Feature Flags", path: "/admin/features", icon: Flag },
         { title: "Help & Support", path: "/admin/help", icon: HelpCircle },
       ]
@@ -226,12 +226,12 @@ function getCurrentPageTitle(pathname: string): string {
     case "notifications": return "Notification Center";
     case "analytics": return "Analytics & Reports";
     case "localization": return "Localization";
+    case "integrations": return "Integrations Management";
     case "assets": return "Sound & Asset Library";
     case "roles": return "Roles & Permissions";
     case "security": return "Security & Audit";
     case "health": return "System Health";
     case "backup": return "Backup & Restore";
-    case "integrations": return "Integrations";
     case "features": return "Feature Flags";
     case "help": return "Help & Support";
     default: return "Admin Console";
