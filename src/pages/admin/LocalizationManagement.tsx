@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { translationApi } from "@/services/api/apiEndpoints";
+import { translationApi } from "@/services/api/endpoints/translationApi";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
