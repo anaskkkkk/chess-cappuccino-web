@@ -12,6 +12,8 @@ import { translationApi } from './endpoints/translationApi';
 import { analyticsApi } from './endpoints/analyticsApi';
 import { websocketApi } from './endpoints/websocketApi';
 import { integrationsApi } from './endpoints/integrationsApi';
+import { notificationsApi } from './endpoints/notificationsApi';
+import { taskApi } from './endpoints/taskApi';
 
 export {
   userApi,
@@ -25,5 +27,7 @@ export {
   translationApi,
   analyticsApi,
   websocketApi,
-  integrationsApi
+  integrationsApi,
+  notificationsApi,
+  taskApi
 };

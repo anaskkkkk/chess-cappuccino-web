@@ -5,4 +5,10 @@ import api, { handleResponse } from '../index';
 export const websocketApi = {
   getAuthToken: () => 
     handleResponse(api.get('/websocket/auth')),
+  
+  getLogs: (filters = {}) => 
+    handleResponse(api.post('/websocket/logs', filters)),
+  
+  subscribeToChannel: (channel: string, authToken: string) => 
+    handleResponse(api.post('/websocket/subscribe', { channel, authToken })),
 };
