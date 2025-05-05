@@ -1,266 +1,293 @@
-import React, { useEffect, useState, useRef } from "react";
-import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import useWebSocket, { ConnectionStatus } from "@/hooks/useWebSocket";
-import { WebSocketMessageType } from "@/services/websocketService";
 import { websocketApi } from "@/services/api/endpoints/websocketApi";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useWebSocket, ConnectionStatus } from "@/hooks/useWebSocket";
+import { WebSocketMessageType } from "@/services/websocketService";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Activity, 
-  AlertCircle, 
-  Clock, 
-  Download, 
-  Eye, 
-  Filter, 
-  Search, 
-  Terminal, 
-  Wifi, 
-  WifiOff 
-} from "lucide-react";
 import {
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger
-} from "@/components/ui/tabs";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  FileTerminal,
+  RefreshCw,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  WifiOff,
+  Wifi,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
-interface Log {
+// Log level type
+type LogLevel = "info" | "warning" | "error" | "debug" | "all";
+
+// Log entry interface
+interface LogEntry {
   id: string;
   timestamp: string;
-  level: "info" | "warning" | "error" | "debug";
+  level: LogLevel;
   source: string;
   message: string;
-  details?: any;
+  details?: string;
 }
 
-const LogItem: React.FC<{ log: Log }> = ({ log }) => {
-  const [expanded, setExpanded] = useState(false);
-  const { t } = useLanguageContext();
-  
-  // Get icon based on log level
-  const getIcon = () => {
-    switch (log.level) {
-      case "error": return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "warning": return <AlertCircle className="h-4 w-4 text-amber-500" />;
-      case "info": return <Activity className="h-4 w-4 text-blue-500" />;
-      case "debug": return <Terminal className="h-4 w-4 text-green-500" />;
-      default: return <Eye className="h-4 w-4" />;
-    }
-  };
-  
-  // Get badge color based on log level
-  const getBadgeVariant = () => {
-    switch (log.level) {
-      case "error": return "destructive";
-      case "warning": return "outline";
-      case "info": return "default";
-      case "debug": return "secondary";
-      default: return "outline";
-    }
-  };
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: -10 }} 
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="border-b border-gray-700 py-2"
-    >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          {getIcon()}
-          <span className="font-mono text-xs text-gray-400">
-            {new Date(log.timestamp).toLocaleTimeString()}
-          </span>
-          <Badge variant={getBadgeVariant()} className="ml-2 text-xs">
-            {log.level.toUpperCase()}
-          </Badge>
-          <span className="ml-2 text-sm text-gray-300">{log.source}</span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {log.details && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 px-2"
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded ? t("Collapse") : t("Expand")}
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <div className="mt-1 text-sm">{log.message}</div>
-      
-      {expanded && log.details && (
-        <div className="mt-2 p-2 bg-gray-800 rounded font-mono text-xs overflow-auto max-h-40">
-          <pre>{JSON.stringify(log.details, null, 2)}</pre>
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
 const RealTimeLogs: React.FC = () => {
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("live");
-  const [page, setPage] = useState(1);
-  const logsEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguageContext();
+  const [activeTab, setActiveTab] = useState<"live" | "historical">("live");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [historicalLogs, setHistoricalLogs] = useState<LogEntry[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState<LogLevel>("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
+  const [authToken, setAuthToken] = useState<string>("");
+  const logsEndRef = useRef<HTMLDivElement>(null);
+  const maxLogs = 100; // Maximum number of live logs to keep
 
-  // Fetch auth token for WebSocket connection
-  const { data: authData, isLoading: isLoadingAuth } = useQuery({
-    queryKey: ["websocketAuth"],
+  // Get WebSocket auth token
+  const { data: tokenData, isLoading: isLoadingToken } = useQuery({
+    queryKey: ["wsAuthToken"],
     queryFn: async () => {
-      const response = await websocketApi.getAuthToken();
-      setAuthToken(response.token);
-      return response;
-    }
+      try {
+        const response = await websocketApi.getAuthToken();
+        return response.data;
+      } catch (error) {
+        console.error("Failed to get WebSocket token:", error);
+        toast.error("Failed to get connection token");
+        return { token: "" };
+      }
+    },
   });
+
+  useEffect(() => {
+    if (tokenData && tokenData.token) {
+      setAuthToken(tokenData.token);
+    }
+  }, [tokenData]);
+
+  // WebSocket connection for live logs
+  const { status: wsStatus, connect: reconnectWs } = useWebSocket<LogEntry>(
+    WebSocketMessageType.SYSTEM_LOG,
+    (data) => {
+      if (data && data.id) {
+        setLogs((prevLogs) => {
+          const newLogs = [data, ...prevLogs].slice(0, maxLogs);
+          return newLogs;
+        });
+      }
+    },
+    {
+      autoConnect: true,
+      authToken,
+    }
+  );
 
   // Fetch historical logs
-  const { data: historicalLogs = [], isLoading: isLoadingLogs } = useQuery({
-    queryKey: ["systemLogs", page, filter !== "all" ? filter : undefined],
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ["systemLogs", page, levelFilter, searchTerm],
     queryFn: async () => {
-      const filters = filter !== "all" ? { level: filter } : {};
-      const response = await websocketApi.getSystemLogs(page, 50, filters);
-      return response.data || [];
+      try {
+        const filters: Record<string, string> = {};
+        if (levelFilter !== "all") {
+          filters.level = levelFilter;
+        }
+        if (searchTerm) {
+          filters.search = searchTerm;
+        }
+        
+        const response = await websocketApi.getSystemLogs(page, 20, filters);
+        return response.data || { logs: [], totalPages: 1 };
+      } catch (error) {
+        console.error("Failed to fetch historical logs:", error);
+        toast.error("Failed to load historical logs");
+        return { logs: [], totalPages: 1 };
+      }
     },
-    enabled: activeTab === "history"
+    enabled: activeTab === "historical",
   });
 
-  // Connect to WebSocket for real-time logs
-  const { status, isConnected } = useWebSocket<Log>(
-    WebSocketMessageType.SYSTEM_LOG,
-    (log) => {
-      setLogs(prevLogs => {
-        const newLogs = [...prevLogs, log];
-        // Keep only the latest 100 logs to prevent memory issues
-        return newLogs.slice(-100);
-      });
-    },
-    { 
-      authToken: authToken || undefined,
-      onError: (error) => {
-        toast.error(`${t("WebSocket Error")}: ${(error as any).message || t("Connection Failed")}`);
-      }
-    }
-  );
-
-  // Scroll to bottom on new logs
+  // Update historical logs when data changes
   useEffect(() => {
-    if (logs.length > 0 && logsEndRef.current) {
+    if (historyData && historyData.logs) {
+      setHistoricalLogs(historyData.logs);
+      setTotalPages(historyData.totalPages || 1);
+    }
+  }, [historyData]);
+
+  // Scroll to bottom of live logs when new logs arrive
+  useEffect(() => {
+    if (activeTab === "live" && logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [logs]);
+  }, [logs, activeTab]);
 
-  // Filter logs based on level and search text
-  const filteredLogs = logs.filter(log => {
-    const matchesFilter = filter === "all" || log.level === filter;
-    const matchesSearch = search === "" || 
-      log.message.toLowerCase().includes(search.toLowerCase()) || 
-      log.source.toLowerCase().includes(search.toLowerCase());
-    
-    return matchesFilter && matchesSearch;
+  // Toggle expanded state of a log
+  const toggleLogExpansion = (id: string) => {
+    setExpandedLogs((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Filter logs by level and search term
+  const filteredLogs = logs.filter((log) => {
+    const matchesLevel = levelFilter === "all" || log.level === levelFilter;
+    const matchesSearch = searchTerm
+      ? log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (log.details || "").toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+    return matchesLevel && matchesSearch;
   });
 
-  // Get the status indicator based on the WebSocket connection status
-  const getStatusIndicator = () => {
-    if (status === "connected") {
-      return (
-        <div className="flex items-center text-green-500">
-          <Wifi className="h-4 w-4 mr-1" />
-          <span className="text-xs">{t("Connected")}</span>
-        </div>
-      );
+  // Get status badge variant based on connection status
+  const getStatusBadgeVariant = (status: ConnectionStatus) => {
+    switch (status) {
+      case "connected":
+        return "success";
+      case "connecting":
+        return "warning";
+      case "disconnected":
+      case "error":
+        return "destructive";
+      default:
+        return "secondary";
     }
-    
-    if (status === "connecting") {
-      return (
-        <div className="flex items-center text-amber-500">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-          >
-            <Activity className="h-4 w-4 mr-1" />
-          </motion.div>
-          <span className="text-xs">{t("Connecting")}</span>
-        </div>
-      );
+  };
+
+  // Get status display text
+  const getStatusDisplay = (status: ConnectionStatus) => {
+    switch (status) {
+      case "connected":
+        return t("Connected");
+      case "connecting":
+        return t("Connecting");
+      case "disconnected":
+        return t("Disconnected");
+      case "error":
+        return t("Connection Failed");
+      default:
+        return t("WebSocket Error");
     }
-    
-    return (
-      <div className="flex items-center text-red-500">
-        <WifiOff className="h-4 w-4 mr-1" />
-        <span className="text-xs">{t("Disconnected")}</span>
-      </div>
+  };
+
+  // Status Icon component
+  const StatusIcon = ({ status }: { status: ConnectionStatus }) => {
+    return status === "connected" ? (
+      <Wifi className="h-4 w-4 mr-2" />
+    ) : (
+      <WifiOff className="h-4 w-4 mr-2" />
     );
   };
 
+  // Log badge component for log levels
+  const LogBadge = ({ level }: { level: LogLevel }) => {
+    let variant:
+      | "default"
+      | "secondary"
+      | "destructive"
+      | "outline"
+      | "success"
+      | null
+      | undefined;
+    
+    switch (level) {
+      case "error":
+        variant = "destructive";
+        break;
+      case "warning":
+        variant = "default";
+        break;
+      case "info":
+        variant = "secondary";
+        break;
+      case "debug":
+        variant = "outline";
+        break;
+      default:
+        variant = "secondary";
+    }
+    
+    return (
+      <Badge variant={variant} className="text-xs font-normal">
+        {level.toUpperCase()}
+      </Badge>
+    );
+  };
+
+  // Handle search submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === "historical") {
+      refetchHistory();
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-chess-text-light">{t("Real-Time Logs")}</h1>
-          <p className="text-sm text-chess-text-light/70 mt-1">
-            {t("Monitor system activity and troubleshoot issues in real-time")}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {getStatusIndicator()}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const timestamp = new Date().toISOString().replace(/:/g, "-");
-              const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `system-logs-${timestamp}.json`;
-              a.click();
-            }}
-            disabled={logs.length === 0}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {t("Export")}
-          </Button>
-        </div>
+    <motion.div
+      className="container mx-auto px-4 py-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-chess-text-light">{t("Real-Time Logs")}</h1>
+        <p className="text-sm text-chess-text-light/70 mt-1">
+          {t("Monitor system activity and troubleshoot issues in real-time")}
+        </p>
       </div>
-      
-      <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex flex-col sm:flex-row justify-between mb-4 gap-4">
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "live" | "historical")}
+        className="space-y-4"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <TabsList>
-            <TabsTrigger value="live">{t("Live Logs")}</TabsTrigger>
-            <TabsTrigger value="history">{t("Historical")}</TabsTrigger>
+            <TabsTrigger value="live">
+              <FileTerminal className="h-4 w-4 mr-2" />
+              {t("Live Logs")}
+            </TabsTrigger>
+            <TabsTrigger value="historical">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t("Historical")}
+            </TabsTrigger>
           </TabsList>
-          
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative w-full sm:w-60">
-              <Search className="h-4 w-4 absolute top-2.5 left-2 text-gray-400" />
+
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center space-x-2 w-full sm:w-auto"
+          >
+            <div className="relative flex-grow">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <Input
                 placeholder={t("Search logs...")}
                 className="pl-8"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+            <Select value={levelFilter} onValueChange={(value) => setLevelFilter(value as LogLevel)}>
+              <SelectTrigger className="w-[120px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder={t("Filter")} />
               </SelectTrigger>
@@ -272,119 +299,189 @@ const RealTimeLogs: React.FC = () => {
                 <SelectItem value="debug">{t("Debug")}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </form>
         </div>
-        
-        <Card className="relative">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>
-                  {activeTab === "live" 
-                    ? t("Live System Logs") 
-                    : t("Historical Logs")}
-                </span>
-              </div>
-              <Badge>
-                {activeTab === "live" 
-                  ? `${filteredLogs.length} ${t("logs")}`
-                  : `${historicalLogs.length} ${t("logs")}`}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
-            {/* Live Logs Tab */}
-            <TabsContent value="live" className="pt-2 m-0">
-              {status === "connected" ? (
-                filteredLogs.length > 0 ? (
-                  <div>
-                    {filteredLogs.map((log) => (
-                      <LogItem key={log.id} log={log} />
-                    ))}
-                    <div ref={logsEndRef} />
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-40">
-                    <Terminal className="h-12 w-12 text-gray-500 mb-2" />
-                    <p className="text-gray-400">{t("Waiting for logs...")}</p>
-                  </div>
-                )
-              ) : (
-                <div className="flex flex-col items-center justify-center h-40">
-                  <WifiOff className="h-12 w-12 text-gray-500 mb-2" />
-                  <p className="text-gray-400">{t("Connecting to log service...")}</p>
-                  {status === "error" && (
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="mt-4"
-                      onClick={() => window.location.reload()}
-                    >
-                      {t("Reconnect")}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* Historical Logs Tab */}
-            <TabsContent value="history" className="pt-2 m-0">
-              {isLoadingLogs ? (
-                <div className="flex flex-col items-center justify-center h-40">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+
+        <TabsContent value="live" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <CardTitle>{t("Live System Logs")}</CardTitle>
+                <div className="flex items-center">
+                  <Badge
+                    variant={getStatusBadgeVariant(wsStatus) as any}
+                    className="flex items-center mr-4"
                   >
-                    <Activity className="h-12 w-12 text-gray-500 mb-2" />
-                  </motion.div>
-                  <p className="text-gray-400">{t("Loading logs...")}</p>
-                </div>
-              ) : (
-                historicalLogs.length > 0 ? (
-                  <div>
-                    {historicalLogs.map((log: Log) => (
-                      <LogItem key={log.id} log={log} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-40">
-                    <Terminal className="h-12 w-12 text-gray-500 mb-2" />
-                    <p className="text-gray-400">{t("No logs found")}</p>
-                  </div>
-                )
-              )}
-              
-              {/* Pagination for historical logs */}
-              {historicalLogs.length > 0 && (
-                <div className="flex justify-center mt-4">
+                    <StatusIcon status={wsStatus} />
+                    {getStatusDisplay(wsStatus)}
+                  </Badge>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
+                    onClick={reconnectWs}
+                    disabled={wsStatus === "connected" || wsStatus === "connecting"}
                   >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {t("Reconnect")}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-md bg-black/50 h-[500px] overflow-auto p-4 text-sm font-mono">
+                {filteredLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <FileTerminal className="h-16 w-16 mb-4 opacity-20" />
+                    <p>{wsStatus === "connected" ? t("Waiting for logs...") : t("Connecting to log service...")}</p>
+                  </div>
+                ) : (
+                  filteredLogs.map((log) => (
+                    <motion.div
+                      key={log.id}
+                      className="mb-2 pb-2 border-b border-gray-700"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-2">
+                        <div className="flex items-center gap-2">
+                          <LogBadge level={log.level} />
+                          <span className="text-gray-400 text-xs">
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </span>
+                          <span className="text-gray-300 text-xs">[{log.source}]</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => toggleLogExpansion(log.id)}
+                        >
+                          {expandedLogs[log.id] ? (
+                            <Minimize2 className="h-4 w-4" />
+                          ) : (
+                            <Maximize2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="mt-1 text-chess-text-light whitespace-pre-wrap">
+                        {log.message}
+                      </div>
+                      {expandedLogs[log.id] && log.details && (
+                        <pre className="mt-2 p-2 bg-gray-800 rounded text-xs overflow-x-auto">
+                          {log.details}
+                        </pre>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+                <div ref={logsEndRef} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="historical" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <CardTitle>{t("Historical Logs")}</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchHistory()}
+                  disabled={isLoadingHistory}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t("Refresh")}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-md bg-black/50 h-[500px] overflow-auto p-4 text-sm font-mono">
+                {isLoadingHistory ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <RefreshCw className="h-16 w-16 mb-4 opacity-20 animate-spin" />
+                    <p>{t("Loading logs...")}</p>
+                  </div>
+                ) : historicalLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <FileTerminal className="h-16 w-16 mb-4 opacity-20" />
+                    <p>{t("No logs found")}</p>
+                  </div>
+                ) : (
+                  historicalLogs.map((log) => (
+                    <motion.div
+                      key={log.id}
+                      className="mb-2 pb-2 border-b border-gray-700"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-2">
+                        <div className="flex items-center gap-2">
+                          <LogBadge level={log.level} />
+                          <span className="text-gray-400 text-xs">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </span>
+                          <span className="text-gray-300 text-xs">[{log.source}]</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => toggleLogExpansion(log.id)}
+                        >
+                          {expandedLogs[log.id] ? (
+                            <Minimize2 className="h-4 w-4" />
+                          ) : (
+                            <Maximize2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="mt-1 text-chess-text-light whitespace-pre-wrap">
+                        {log.message}
+                      </div>
+                      {expandedLogs[log.id] && log.details && (
+                        <pre className="mt-2 p-2 bg-gray-800 rounded text-xs overflow-x-auto">
+                          {log.details}
+                        </pre>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1 || isLoadingHistory}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
                     {t("Previous")}
                   </Button>
-                  <div className="mx-4 flex items-center">
-                    {t("Page")} {page}
-                  </div>
+                  <span className="text-sm text-chess-text-light">
+                    {t("Page")} {page} / {totalPages}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={historicalLogs.length < 50}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || isLoadingHistory}
                   >
                     {t("Next")}
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               )}
-            </TabsContent>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 };
 

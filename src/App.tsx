@@ -42,6 +42,9 @@ import OrdersPayments from "./pages/admin/OrdersPayments";
 import SmartBoardFleet from "./pages/admin/SmartBoardFleet";
 import LocalizationManagement from "./pages/admin/LocalizationManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
+import RealTimeLogs from "./pages/admin/RealTimeLogs";
+import Notifications from "./pages/admin/Notifications";
+import Analytics from "./pages/admin/Analytics";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -97,11 +100,11 @@ const AppRoutes = () => {
         <Route path="/admin/smartboards" element={<AdminLayout><SmartBoardFleet /></AdminLayout>} />
         <Route path="/admin/localization" element={<AdminLayout><LocalizationManagement /></AdminLayout>} />
         <Route path="/admin/integrations" element={<AdminLayout><IntegrationsManagement /></AdminLayout>} />
+        <Route path="/admin/logs" element={<AdminLayout><RealTimeLogs /></AdminLayout>} />
+        <Route path="/admin/notifications" element={<AdminLayout><Notifications /></AdminLayout>} />
+        <Route path="/admin/analytics" element={<AdminLayout><Analytics /></AdminLayout>} />
         
         {/* Other admin routes */}
-        <Route path="/admin/logs" element={<AdminLayout><div className="p-6 text-chess-text-light">Real-Time Logs</div></AdminLayout>} />
-        <Route path="/admin/notifications" element={<AdminLayout><div className="p-6 text-chess-text-light">Notification Center</div></AdminLayout>} />
-        <Route path="/admin/analytics" element={<AdminLayout><div className="p-6 text-chess-text-light">Analytics & Reports</div></AdminLayout>} />
         <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
         <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
         <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />

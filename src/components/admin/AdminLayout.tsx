@@ -64,54 +64,54 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   
   const adminMenuItems = [
     {
-      label: "coreSection",
+      label: "adminCoreSection",
       items: [
-        { title: "dashboardPage", path: "/admin", icon: LayoutDashboard },
-        { title: "userManagementPage", path: "/admin/users", icon: Users },
-        { title: "gameManagementPage", path: "/admin/games", icon: Gamepad },
-        { title: "tournamentManagerPage", path: "/admin/tournaments", icon: Trophy },
+        { title: "adminDashboardPage", path: "/admin", icon: LayoutDashboard },
+        { title: "adminUserManagementPage", path: "/admin/users", icon: Users },
+        { title: "adminGameManagementPage", path: "/admin/games", icon: Gamepad },
+        { title: "adminTournamentManagerPage", path: "/admin/tournaments", icon: Trophy },
       ]
     },
     {
-      label: "contentSection",
+      label: "adminContentSection",
       items: [
-        { title: "coursesPage", path: "/admin/courses", icon: BookOpen },
-        { title: "puzzlesPage", path: "/admin/puzzles", icon: BookCopy }, // Changed icon here
-        { title: "contentPagesPage", path: "/admin/content", icon: FileText },
+        { title: "adminCoursesPage", path: "/admin/courses", icon: BookOpen },
+        { title: "adminPuzzlesPage", path: "/admin/puzzles", icon: BookCopy }, // Changed icon here
+        { title: "adminContentPagesPage", path: "/admin/content", icon: FileText },
       ]
     },
     {
-      label: "businessSection",
+      label: "adminBusinessSection",
       items: [
-        { title: "ordersAndPaymentsPage", path: "/admin/orders", icon: ShoppingCart },
+        { title: "adminOrdersAndPaymentsPage", path: "/admin/orders", icon: ShoppingCart },
       ]
     },
     {
-      label: "hardwareSection",
+      label: "adminHardwareSection",
       items: [
-        { title: "smartBoardFleetPage", path: "/admin/smartboards", icon: HardDrive },
+        { title: "adminSmartBoardFleetPage", path: "/admin/smartboards", icon: HardDrive },
       ]
     },
     {
-      label: "monitoringSection",
+      label: "adminMonitoringSection",
       items: [
-        { title: "realTimeLogsPage", path: "/admin/logs", icon: FileTerminal },
-        { title: "notificationsPage", path: "/admin/notifications", icon: Bell },
-        { title: "analyticsPage", path: "/admin/analytics", icon: BarChart },
+        { title: "adminRealTimeLogsPage", path: "/admin/logs", icon: FileTerminal },
+        { title: "adminNotificationsPage", path: "/admin/notifications", icon: Bell },
+        { title: "adminAnalyticsPage", path: "/admin/analytics", icon: BarChart },
       ]
     },
     {
-      label: "settingsSection",
+      label: "adminSettingsSection",
       items: [
-        { title: "localizationPage", path: "/admin/localization", icon: Languages },
-        { title: "integrationsPage", path: "/admin/integrations", icon: Plug },
-        { title: "soundAndAssetsPage", path: "/admin/assets", icon: Music },
-        { title: "rolesAndPermissionsPage", path: "/admin/roles", icon: ShieldCheck },
-        { title: "securityAndAuditPage", path: "/admin/security", icon: Lock },
-        { title: "systemHealthPage", path: "/admin/health", icon: Activity },
-        { title: "backupAndRestorePage", path: "/admin/backup", icon: Save },
-        { title: "featureFlagsPage", path: "/admin/features", icon: Flag },
-        { title: "helpAndSupportPage", path: "/admin/help", icon: HelpCircle },
+        { title: "adminLocalizationPage", path: "/admin/localization", icon: Languages },
+        { title: "adminIntegrationsPage", path: "/admin/integrations", icon: Plug },
+        { title: "adminSoundAndAssetsPage", path: "/admin/assets", icon: Music },
+        { title: "adminRolesAndPermissionsPage", path: "/admin/roles", icon: ShieldCheck },
+        { title: "adminSecurityAndAuditPage", path: "/admin/security", icon: Lock },
+        { title: "adminSystemHealthPage", path: "/admin/health", icon: Activity },
+        { title: "adminBackupAndRestorePage", path: "/admin/backup", icon: Save },
+        { title: "adminFeatureFlagsPage", path: "/admin/features", icon: Flag },
+        { title: "adminHelpAndSupportPage", path: "/admin/help", icon: HelpCircle },
       ]
     }
   ];
