@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { notificationsApi } from "@/services/api/endpoints/notificationsApi";
+import { notificationsApi, NewNotification } from "@/services/api/endpoints/notificationsApi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,15 +42,19 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Notification type
-type NotificationType = "system" | "game" | "tournament" | "marketing" | "all";
+// Notification type for displaying notifications
+// 'all' is only for filtering purposes, not for creating notifications
+type DisplayNotificationType = "system" | "game" | "tournament" | "marketing" | "all";
+
+// Type for creating notifications - matching the API expectations
+type CreateNotificationType = "system" | "game" | "tournament" | "marketing";
 
 // Notification interface
 interface Notification {
   id: string;
   title: string;
   content: string;
-  type: NotificationType;
+  type: DisplayNotificationType;
   createdAt: string;
   read: boolean;
 }
@@ -76,7 +80,7 @@ interface NotificationSettings {
 interface NewNotificationForm {
   title: string;
   content: string;
-  type: NotificationType;
+  type: CreateNotificationType;
   target: "all" | "players" | "admins" | "premium";
 }
 
@@ -85,7 +89,7 @@ const Notifications: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"notifications" | "settings">("notifications");
   const [notificationsFilter, setNotificationsFilter] = useState<"all" | "unread">("all");
-  const [typeFilter, setTypeFilter] = useState<NotificationType>("all");
+  const [typeFilter, setTypeFilter] = useState<DisplayNotificationType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   
@@ -267,7 +271,7 @@ const Notifications: React.FC = () => {
   };
 
   // Get notification type badge
-  const getNotificationTypeBadge = (type: NotificationType) => {
+  const getNotificationTypeBadge = (type: DisplayNotificationType) => {
     let variant:
       | "default"
       | "secondary"
