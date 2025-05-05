@@ -48,6 +48,7 @@ import AdminIntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import AdminSoundAndAssets from "./pages/admin/SoundAndAssets";
 import AdminRolesAndPermissions from "./pages/admin/RolesAndPermissions";
 import AdminSecurityAudit from "./pages/admin/SecurityAudit";
+import AdminSystemHealth from "./pages/admin/SystemHealth";
 
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -240,25 +241,24 @@ const App: React.FC = () => {
             />
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUserManagement />} />
-              <Route path="games" element={<AdminGameManagement />} />
-              <Route path="tournaments" element={<AdminTournamentManager />} />
-              <Route path="courses" element={<AdminCoursesCMS />} />
-              <Route path="puzzles" element={<AdminPuzzleManagement />} />
-              <Route path="content" element={<AdminContentPages />} />
-              <Route path="orders" element={<AdminOrdersPayments />} />
-              <Route path="smartboard" element={<AdminSmartBoardFleet />} />
-              <Route path="notifications" element={<AdminNotifications />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="logs" element={<AdminRealTimeLogs />} />
-              <Route path="localization" element={<AdminLocalizationManagement />} />
-              <Route path="integrations" element={<AdminIntegrationsManagement />} />
-              <Route path="sound-assets" element={<AdminSoundAndAssets />} />
-              <Route path="roles-permissions" element={<AdminRolesAndPermissions />} />
-              <Route path="security" element={<AdminSecurityAudit />} />
-            </Route>
+            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/admin/users" element={<AdminLayout><AdminUserManagement /></AdminLayout>} />
+            <Route path="/admin/games" element={<AdminLayout><AdminGameManagement /></AdminLayout>} />
+            <Route path="/admin/tournaments" element={<AdminLayout><AdminTournamentManager /></AdminLayout>} />
+            <Route path="/admin/courses" element={<AdminLayout><AdminCoursesCMS /></AdminLayout>} />
+            <Route path="/admin/puzzles" element={<AdminLayout><AdminPuzzleManagement /></AdminLayout>} />
+            <Route path="/admin/content" element={<AdminLayout><AdminContentPages /></AdminLayout>} />
+            <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPayments /></AdminLayout>} />
+            <Route path="/admin/smartboards" element={<AdminLayout><AdminSmartBoardFleet /></AdminLayout>} />
+            <Route path="/admin/logs" element={<AdminLayout><AdminRealTimeLogs /></AdminLayout>} />
+            <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
+            <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+            <Route path="/admin/localization" element={<AdminLayout><AdminLocalizationManagement /></AdminLayout>} />
+            <Route path="/admin/integrations" element={<AdminLayout><AdminIntegrationsManagement /></AdminLayout>} />
+            <Route path="/admin/assets" element={<AdminLayout><AdminSoundAndAssets /></AdminLayout>} />
+            <Route path="/admin/roles" element={<AdminLayout><AdminRolesAndPermissions /></AdminLayout>} />
+            <Route path="/admin/security" element={<AdminLayout><AdminSecurityAudit /></AdminLayout>} />
+            <Route path="/admin/health" element={<AdminLayout><AdminSystemHealth /></AdminLayout>} />
             
             {/* 404 Route */}
             <Route

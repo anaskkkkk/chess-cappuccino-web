@@ -1,48 +1,19 @@
 
-import React, { useState } from "react";
-import { useLanguageContext } from "@/contexts/LanguageContext";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import React, { useState, useEffect } from 'react';
+import { useLanguageContext } from '@/contexts/LanguageContext';
 import {
-  Shield,
-  ShieldX,
-  FileLock,
-  History,
-  FileSearch,
-  RefreshCw,
-  Search,
-  Download,
-  Calendar,
-  User,
-  Activity,
-  Bookmark,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  Filter
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -50,801 +21,963 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Lock, Shield, AlertTriangle, Check, Info, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import PageTransition from '@/components/common/PageTransition';
+import { useToast } from '@/hooks/use-toast';
 
-// Types for security and audit logs
 interface AuditLog {
   id: string;
-  action: string;
+  timestamp: Date;
   userId: string;
-  userName: string;
-  userEmail: string;
-  timestamp: string;
+  username: string;
+  action: string;
+  category: 'authentication' | 'user' | 'content' | 'admin' | 'access' | 'data';
+  details: string;
   ipAddress: string;
   userAgent: string;
-  details: string;
-  category: "auth" | "user" | "content" | "system" | "admin";
-  severity: "info" | "warning" | "critical";
-  status: "success" | "failure";
+  status: 'success' | 'failure';
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface SecurityEvent {
   id: string;
+  timestamp: Date;
+  category: 'authentication' | 'user' | 'content' | 'admin' | 'access' | 'data';
   event: string;
-  source: string;
-  timestamp: string;
-  ipAddress: string;
   details: string;
-  category: "access" | "authentication" | "data" | "system";
-  severity: "low" | "medium" | "high" | "critical";
-  resolved: boolean;
+  ipAddress: string;
+  userId: string | null;
+  username: string | null;
+  status: 'open' | 'resolved';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
 }
 
-interface LogFilters {
-  startDate?: Date;
-  endDate?: Date;
-  searchTerm: string;
-  category: string;
-  severity: string;
-  status?: string;
-  userId?: string;
-}
+// Mock data for audit logs
+const mockAuditLogs: AuditLog[] = [
+  {
+    id: '1',
+    timestamp: new Date(),
+    userId: 'user123',
+    username: 'admin',
+    action: 'User Login',
+    category: 'authentication',
+    details: 'Successful login',
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    status: 'success',
+    severity: 'low',
+  },
+  {
+    id: '2',
+    timestamp: new Date(Date.now() - 60000),
+    userId: 'user456',
+    username: 'john_doe',
+    action: 'Profile Update',
+    category: 'user',
+    details: 'Changed email address',
+    ipAddress: '192.168.1.2',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)',
+    status: 'success',
+    severity: 'low',
+  },
+  {
+    id: '3',
+    timestamp: new Date(Date.now() - 120000),
+    userId: 'user789',
+    username: 'jane_smith',
+    action: 'Failed Login',
+    category: 'authentication',
+    details: 'Invalid password provided',
+    ipAddress: '192.168.1.3',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS)',
+    status: 'failure',
+    severity: 'medium',
+  },
+  {
+    id: '4',
+    timestamp: new Date(Date.now() - 180000),
+    userId: 'admin001',
+    username: 'super_admin',
+    action: 'Role Updated',
+    category: 'admin',
+    details: 'Changed user permissions',
+    ipAddress: '192.168.1.4',
+    userAgent: 'Mozilla/5.0 (Linux; Android)',
+    status: 'success',
+    severity: 'high',
+  },
+  {
+    id: '5',
+    timestamp: new Date(Date.now() - 240000),
+    userId: 'user123',
+    username: 'admin',
+    action: 'Content Published',
+    category: 'content',
+    details: 'Published new course',
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    status: 'success',
+    severity: 'low',
+  },
+  {
+    id: '6',
+    timestamp: new Date(Date.now() - 300000),
+    userId: 'user456',
+    username: 'john_doe',
+    action: 'API Access',
+    category: 'access',
+    details: 'Accessed restricted API endpoint',
+    ipAddress: '192.168.1.5',
+    userAgent: 'PostmanRuntime/7.29.0',
+    status: 'failure',
+    severity: 'critical',
+  },
+  {
+    id: '7',
+    timestamp: new Date(Date.now() - 360000),
+    userId: 'user789',
+    username: 'jane_smith',
+    action: 'Data Export',
+    category: 'data',
+    details: 'Exported user analytics',
+    ipAddress: '192.168.1.6',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)',
+    status: 'success',
+    severity: 'medium',
+  },
+];
+
+// Mock data for security events
+const mockSecurityEvents: SecurityEvent[] = [
+  {
+    id: '1',
+    timestamp: new Date(),
+    category: 'authentication',
+    event: 'Multiple Failed Login Attempts',
+    details: '5 failed login attempts for username "admin" within 10 minutes',
+    ipAddress: '203.0.113.1',
+    userId: null,
+    username: 'admin',
+    status: 'open',
+    severity: 'high',
+    source: 'Auth Service',
+  },
+  {
+    id: '2',
+    timestamp: new Date(Date.now() - 3600000),
+    category: 'access',
+    event: 'Unusual API Usage Pattern',
+    details: 'High frequency of API calls detected from unusual location',
+    ipAddress: '203.0.113.2',
+    userId: 'user123',
+    username: 'john_doe',
+    status: 'resolved',
+    severity: 'medium',
+    source: 'API Gateway',
+  },
+  {
+    id: '3',
+    timestamp: new Date(Date.now() - 7200000),
+    category: 'admin',
+    event: 'Admin Privilege Escalation',
+    details: 'User gained admin privileges through role modification',
+    ipAddress: '203.0.113.3',
+    userId: 'user456',
+    username: 'jane_smith',
+    status: 'open',
+    severity: 'critical',
+    source: 'User Management Service',
+  },
+  {
+    id: '4',
+    timestamp: new Date(Date.now() - 86400000),
+    category: 'data',
+    event: 'Unusual Data Access Pattern',
+    details: 'User accessed large volume of user records in short time',
+    ipAddress: '203.0.113.4',
+    userId: 'user789',
+    username: 'robert_johnson',
+    status: 'open',
+    severity: 'high',
+    source: 'Database Monitor',
+  },
+  {
+    id: '5',
+    timestamp: new Date(Date.now() - 172800000),
+    category: 'content',
+    event: 'Suspicious Content Modification',
+    details: 'Multiple course content modified by same user in short timeframe',
+    ipAddress: '203.0.113.5',
+    userId: 'user321',
+    username: 'david_miller',
+    status: 'resolved',
+    severity: 'medium',
+    source: 'Content Management System',
+  },
+];
 
 const SecurityAudit: React.FC = () => {
-  const { t } = useLanguageContext();
+  const { t, isRTL } = useLanguageContext();
+  const { toast } = useToast();
   
-  // State for security and audit logs
-  const [activeTab, setActiveTab] = useState<"audit" | "security">("audit");
-  const [expandedLog, setExpandedLog] = useState<string | null>(null);
-  const [filters, setFilters] = useState<LogFilters>({
-    searchTerm: "",
-    category: "all",
-    severity: "all",
-    status: "all"
-  });
+  // State for audit logs
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(mockAuditLogs);
+  const [auditCategory, setAuditCategory] = useState<string>('all');
+  const [auditSeverity, setAuditSeverity] = useState<string>('all');
+  const [auditStatus, setAuditStatus] = useState<string>('all');
+  const [auditSearch, setAuditSearch] = useState<string>('');
+  const [auditPage, setAuditPage] = useState<number>(1);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [isLogDetailsOpen, setIsLogDetailsOpen] = useState<boolean>(false);
   
-  // Query for fetching audit logs
-  const { 
-    data: auditLogs = [], 
-    isLoading: isLoadingAuditLogs,
-    refetch: refetchAuditLogs 
-  } = useQuery({
-    queryKey: ["audit-logs", filters],
-    queryFn: async () => {
-      // TODO: Replace with actual API call to fetch audit logs
-      console.log("Fetching audit logs with filters:", filters);
-      
-      // Mock data for demonstration
-      return [
-        {
-          id: "1",
-          action: "User Login",
-          userId: "user123",
-          userName: "John Smith",
-          userEmail: "john@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-          ipAddress: "192.168.1.1",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          details: "Successful login via password",
-          category: "auth",
-          severity: "info",
-          status: "success"
-        },
-        {
-          id: "2",
-          action: "Password Reset",
-          userId: "user456",
-          userName: "Jane Doe",
-          userEmail: "jane@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-          ipAddress: "192.168.1.2",
-          userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)",
-          details: "Password reset requested",
-          category: "auth",
-          severity: "info",
-          status: "success"
-        },
-        {
-          id: "3",
-          action: "Failed Login Attempt",
-          userId: "user789",
-          userName: "Mike Johnson",
-          userEmail: "mike@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-          ipAddress: "192.168.1.3",
-          userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-          details: "Failed login attempt - incorrect password (3rd attempt)",
-          category: "auth",
-          severity: "warning",
-          status: "failure"
-        },
-        {
-          id: "4",
-          action: "User Account Updated",
-          userId: "user123",
-          userName: "John Smith",
-          userEmail: "john@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-          ipAddress: "192.168.1.1",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          details: "User updated profile information",
-          category: "user",
-          severity: "info",
-          status: "success"
-        },
-        {
-          id: "5",
-          action: "Content Deleted",
-          userId: "admin1",
-          userName: "Admin User",
-          userEmail: "admin@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
-          ipAddress: "192.168.1.4",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          details: "Course content deleted - ID: course123",
-          category: "content",
-          severity: "warning",
-          status: "success"
-        },
-        {
-          id: "6",
-          action: "System Update",
-          userId: "system",
-          userName: "System",
-          userEmail: "system@example.com",
-          timestamp: new Date(Date.now() - 1000 * 60 * 360).toISOString(), // 6 hours ago
-          ipAddress: "internal",
-          userAgent: "System/1.0",
-          details: "Scheduled system maintenance and updates applied",
-          category: "system",
-          severity: "info",
-          status: "success"
-        },
-      ] as AuditLog[];
-    }
-  });
+  // State for security events
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>(mockSecurityEvents);
+  const [eventCategory, setEventCategory] = useState<string>('all');
+  const [eventSeverity, setEventSeverity] = useState<string>('all');
+  const [eventStatus, setEventStatus] = useState<string>('all');
+  const [eventSearch, setEventSearch] = useState<string>('');
+  const [eventPage, setEventPage] = useState<number>(1);
+  const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
+  const [isEventDetailsOpen, setIsEventDetailsOpen] = useState<boolean>(false);
   
-  // Query for fetching security events
-  const { 
-    data: securityEvents = [], 
-    isLoading: isLoadingSecurityEvents,
-    refetch: refetchSecurityEvents 
-  } = useQuery({
-    queryKey: ["security-events", filters],
-    queryFn: async () => {
-      // TODO: Replace with actual API call to fetch security events
-      console.log("Fetching security events with filters:", filters);
-      
-      // Mock data for demonstration
-      return [
-        {
-          id: "1",
-          event: "Suspicious Login Attempt",
-          source: "Auth Service",
-          timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
-          ipAddress: "203.0.113.42",
-          details: "Multiple failed login attempts from unusual location",
-          category: "authentication",
-          severity: "high",
-          resolved: false
-        },
-        {
-          id: "2",
-          event: "API Rate Limit Exceeded",
-          source: "API Gateway",
-          timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 minutes ago
-          ipAddress: "198.51.100.73",
-          details: "User exceeded API rate limits by 300%",
-          category: "access",
-          severity: "medium",
-          resolved: true
-        },
-        {
-          id: "3",
-          event: "Unauthorized Access Attempt",
-          source: "Content Management System",
-          timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 1.5 hours ago
-          ipAddress: "192.0.2.128",
-          details: "Attempt to access restricted admin area without permissions",
-          category: "access",
-          severity: "high",
-          resolved: true
-        },
-        {
-          id: "4",
-          event: "Database Connection Failure",
-          source: "Database Service",
-          timestamp: new Date(Date.now() - 1000 * 60 * 150).toISOString(), // 2.5 hours ago
-          ipAddress: "internal",
-          details: "Temporary connection failure to primary database",
-          category: "system",
-          severity: "critical",
-          resolved: true
-        },
-        {
-          id: "5",
-          event: "Data Export",
-          source: "User Management",
-          timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(), // 4 hours ago
-          ipAddress: "192.168.1.4",
-          details: "Admin exported user data containing PII",
-          category: "data",
-          severity: "medium",
-          resolved: true
-        }
-      ] as SecurityEvent[];
-    }
-  });
+  // Date range state
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   
-  // Handle downloading logs
-  const handleDownloadLogs = (type: "audit" | "security") => {
-    // TODO: Implement log download functionality
-    console.log(`Downloading ${type} logs with filters:`, filters);
-    
-    // Mock download
-    const timestamp = format(new Date(), "yyyy-MM-dd");
-    const filename = `${type}-logs-${timestamp}.csv`;
-    
-    // In a real implementation, you would generate a CSV file and download it
-    // For demonstration, we'll just show a success message
-    alert(`Downloading ${filename}. In a real implementation, this would download the logs as a CSV file.`);
-  };
+  const logsPerPage = 5;
+  const eventsPerPage = 5;
   
-  // Apply all filters to the logs
-  const filteredAuditLogs = auditLogs.filter(log => {
-    // Search term filter
-    if (filters.searchTerm && !log.action.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
-        !log.userName.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
-        !log.details.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
-      return false;
-    }
+  // Filter audit logs based on search, category, severity, status, and date
+  const filteredAuditLogs = auditLogs.filter((log) => {
+    // Search filter
+    const searchMatch = 
+      auditSearch === '' || 
+      log.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      log.username.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      log.details.toLowerCase().includes(auditSearch.toLowerCase());
     
     // Category filter
-    if (filters.category !== "all" && log.category !== filters.category) {
-      return false;
-    }
+    const categoryMatch = 
+      auditCategory === 'all' || 
+      log.category === auditCategory;
     
     // Severity filter
-    if (filters.severity !== "all" && log.severity !== filters.severity) {
-      return false;
-    }
+    const severityMatch = 
+      auditSeverity === 'all' || 
+      log.severity === auditSeverity;
     
     // Status filter
-    if (filters.status !== "all" && log.status !== filters.status) {
-      return false;
-    }
+    const statusMatch = 
+      auditStatus === 'all' || 
+      log.status === auditStatus;
     
     // Date range filter
-    if (filters.startDate && new Date(log.timestamp) < filters.startDate) {
-      return false;
-    }
+    const dateMatch =
+      (startDate === '' || new Date(log.timestamp) >= new Date(startDate)) &&
+      (endDate === '' || new Date(log.timestamp) <= new Date(endDate));
     
-    if (filters.endDate) {
-      const endDate = new Date(filters.endDate);
-      endDate.setHours(23, 59, 59, 999);
-      if (new Date(log.timestamp) > endDate) {
-        return false;
-      }
-    }
-    
-    return true;
+    return searchMatch && categoryMatch && severityMatch && statusMatch && dateMatch;
   });
   
-  // Apply all filters to security events
-  const filteredSecurityEvents = securityEvents.filter(event => {
-    // Search term filter
-    if (filters.searchTerm && !event.event.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
-        !event.details.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
-      return false;
-    }
+  // Filter security events based on search, category, severity, status, and date
+  const filteredSecurityEvents = securityEvents.filter((event) => {
+    // Search filter
+    const searchMatch = 
+      eventSearch === '' || 
+      event.event.toLowerCase().includes(eventSearch.toLowerCase()) ||
+      (event.username && event.username.toLowerCase().includes(eventSearch.toLowerCase())) ||
+      event.details.toLowerCase().includes(eventSearch.toLowerCase());
     
     // Category filter
-    if (filters.category !== "all" && event.category !== filters.category) {
-      return false;
-    }
+    const categoryMatch = 
+      eventCategory === 'all' || 
+      event.category === eventCategory;
     
     // Severity filter
-    if (filters.severity !== "all" && event.severity !== filters.severity) {
-      return false;
-    }
+    const severityMatch = 
+      eventSeverity === 'all' || 
+      event.severity === eventSeverity;
+    
+    // Status filter
+    const statusMatch = 
+      eventStatus === 'all' || 
+      event.status === eventStatus;
     
     // Date range filter
-    if (filters.startDate && new Date(event.timestamp) < filters.startDate) {
-      return false;
-    }
+    const dateMatch =
+      (startDate === '' || new Date(event.timestamp) >= new Date(startDate)) &&
+      (endDate === '' || new Date(event.timestamp) <= new Date(endDate));
     
-    if (filters.endDate) {
-      const endDate = new Date(filters.endDate);
-      endDate.setHours(23, 59, 59, 999);
-      if (new Date(event.timestamp) > endDate) {
-        return false;
-      }
-    }
-    
-    return true;
+    return searchMatch && categoryMatch && severityMatch && statusMatch && dateMatch;
   });
   
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "MMM d, yyyy HH:mm:ss");
+  // Pagination for audit logs
+  const paginatedAuditLogs = filteredAuditLogs.slice(
+    (auditPage - 1) * logsPerPage,
+    auditPage * logsPerPage
+  );
+  
+  // Pagination for security events
+  const paginatedSecurityEvents = filteredSecurityEvents.slice(
+    (eventPage - 1) * eventsPerPage,
+    eventPage * eventsPerPage
+  );
+  
+  // Total pages calculation
+  const totalAuditPages = Math.ceil(filteredAuditLogs.length / logsPerPage);
+  const totalEventPages = Math.ceil(filteredSecurityEvents.length / eventsPerPage);
+  
+  // View audit log details
+  const viewLogDetails = (log: AuditLog) => {
+    setSelectedLog(log);
+    setIsLogDetailsOpen(true);
   };
   
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+  // View security event details
+  const viewEventDetails = (event: SecurityEvent) => {
+    setSelectedEvent(event);
+    setIsEventDetailsOpen(true);
   };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 },
+  
+  // Mark security event as resolved
+  const markEventAsResolved = (eventId: string) => {
+    setSecurityEvents(
+      securityEvents.map((event) =>
+        event.id === eventId ? { ...event, status: 'resolved' } : event
+      )
+    );
+    setIsEventDetailsOpen(false);
+    
+    // Show success toast
+    toast({
+      title: t("Event marked as resolved"),
+      description: `Event ID: ${eventId}`,
+    });
+  };
+  
+  // Clear filters
+  const clearFilters = () => {
+    setAuditCategory('all');
+    setAuditSeverity('all');
+    setAuditStatus('all');
+    setAuditSearch('');
+    setStartDate('');
+    setEndDate('');
+    setEventCategory('all');
+    setEventSeverity('all');
+    setEventStatus('all');
+    setEventSearch('');
+  };
+  
+  // Set date range for last 7 days
+  const setLast7Days = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 7);
+    
+    setStartDate(startDate.toISOString().split('T')[0]);
+    setEndDate(endDate.toISOString().split('T')[0]);
+  };
+  
+  // Get severity badge
+  const getSeverityBadge = (severity: string) => {
+    switch (severity) {
+      case 'low':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Low</Badge>;
+      case 'medium':
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Medium</Badge>;
+      case 'high':
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">High</Badge>;
+      case 'critical':
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Critical</Badge>;
+      default:
+        return <Badge variant="outline">{severity}</Badge>;
     }
   };
-
+  
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Success</Badge>;
+      case 'failure':
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Failure</Badge>;
+      case 'open':
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200">Open</Badge>;
+      case 'resolved':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Resolved</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'authentication':
+        return <Lock className="size-4 text-purple-600" />;
+      case 'user':
+        return <Info className="size-4 text-blue-600" />;
+      case 'content':
+        return <Info className="size-4 text-green-600" />;
+      case 'admin':
+        return <Shield className="size-4 text-orange-600" />;
+      case 'access':
+        return <AlertTriangle className="size-4 text-yellow-600" />;
+      case 'data':
+        return <AlertTriangle className="size-4 text-red-600" />;
+      default:
+        return <Info className="size-4" />;
+    }
+  };
+  
+  // TODO: API integration for fetching audit logs
+  const fetchAuditLogs = () => {
+    // This will be replaced with actual API call
+    console.log('Fetching audit logs with filters:', { 
+      category: auditCategory, 
+      severity: auditSeverity,
+      status: auditStatus,
+      search: auditSearch,
+      startDate,
+      endDate
+    });
+  };
+  
+  // TODO: API integration for fetching security events
+  const fetchSecurityEvents = () => {
+    // This will be replaced with actual API call
+    console.log('Fetching security events with filters:', { 
+      category: eventCategory, 
+      severity: eventSeverity,
+      status: eventStatus,
+      search: eventSearch,
+      startDate,
+      endDate
+    });
+  };
+  
+  // Apply filters when they change
+  useEffect(() => {
+    fetchAuditLogs();
+  }, [auditCategory, auditSeverity, auditStatus, auditSearch, startDate, endDate]);
+  
+  useEffect(() => {
+    fetchSecurityEvents();
+  }, [eventCategory, eventSeverity, eventStatus, eventSearch, startDate, endDate]);
+  
   return (
-    <motion.div 
-      className="container mx-auto px-4 py-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <PageTransition>
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-chess-text-light">{t("Security & Audit Logs")}</h1>
-          <p className="text-sm text-chess-text-light/70 mt-1">
-            {t("Monitor security events and user activity across the platform")}
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("Security & Audit Logs")}</h1>
+          <p className="text-muted-foreground">{t("Monitor security events and user activity across the platform")}</p>
         </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => activeTab === "audit" ? refetchAuditLogs() : refetchSecurityEvents()}
-            disabled={activeTab === "audit" ? isLoadingAuditLogs : isLoadingSecurityEvents}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${(activeTab === "audit" ? isLoadingAuditLogs : isLoadingSecurityEvents) ? "animate-spin" : ""}`} />
-            {t("Refresh")}
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => handleDownloadLogs(activeTab)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {t("Export")}
-          </Button>
-        </div>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
-        <div className="flex flex-col space-y-4">
-          <TabsList className="w-full md:w-auto">
-            <TabsTrigger value="audit" className="flex-1 md:flex-none">
-              <History className="h-4 w-4 mr-2" />
-              {t("Audit Logs")}
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex-1 md:flex-none">
-              <ShieldX className="h-4 w-4 mr-2" />
-              {t("Security Events")}
-            </TabsTrigger>
+        
+        <Tabs defaultValue="audit" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="audit">{t("Audit Logs")}</TabsTrigger>
+            <TabsTrigger value="security">{t("Security Events")}</TabsTrigger>
           </TabsList>
           
+          {/* Filter Card */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{t("Filters")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <Label htmlFor="search">{t("Search")}</Label>
                   <Input
+                    id="search"
                     placeholder={t("Search logs...")}
-                    value={filters.searchTerm}
-                    onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
-                    className="pl-8 w-full"
+                    value={auditSearch}
+                    onChange={(e) => setAuditSearch(e.target.value)}
+                    className="min-w-0"
                   />
-                  {filters.searchTerm && (
-                    <button
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      onClick={() => setFilters({...filters, searchTerm: ""})}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="flex gap-1 h-10">
-                        <Calendar className="h-4 w-4" />
-                        {filters.startDate && filters.endDate ? (
-                          <span>
-                            {format(filters.startDate, "MMM d")} - {format(filters.endDate, "MMM d")}
-                          </span>
-                        ) : filters.startDate ? (
-                          <span>
-                            {format(filters.startDate, "MMM d")} - 
-                          </span>
-                        ) : (
-                          <span>{t("Date Range")}</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <div className="flex">
-                        <div className="p-2 border-r">
-                          <h4 className="text-sm font-medium mb-2">{t("Start Date")}</h4>
-                          <CalendarComponent
-                            mode="single"
-                            selected={filters.startDate}
-                            onSelect={(date) => setFilters({...filters, startDate: date || undefined})}
-                            initialFocus
-                          />
-                        </div>
-                        <div className="p-2">
-                          <h4 className="text-sm font-medium mb-2">{t("End Date")}</h4>
-                          <CalendarComponent
-                            mode="single"
-                            selected={filters.endDate}
-                            onSelect={(date) => setFilters({...filters, endDate: date || undefined})}
-                            initialFocus
-                            disabled={(date) => 
-                              filters.startDate ? date < filters.startDate : false
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="border-t p-2 flex justify-between">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFilters({...filters, startDate: undefined, endDate: undefined})}
-                        >
-                          {t("Clear")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            // Set to today
-                            const today = new Date();
-                            const startOfWeek = new Date();
-                            startOfWeek.setDate(today.getDate() - 7);
-                            setFilters({
-                              ...filters, 
-                              startDate: startOfWeek,
-                              endDate: today
-                            });
-                          }}
-                        >
-                          {t("Last 7 days")}
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  
-                  <Select
-                    value={filters.category}
-                    onValueChange={(value) => setFilters({...filters, category: value})}
-                  >
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue placeholder={t("Category")} />
+                <div className="space-y-2">
+                  <Label>{t("Date Range")}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="startDate" className="sr-only">{t("Start Date")}</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="min-w-0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate" className="sr-only">{t("End Date")}</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="min-w-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category">{t("Category")}</Label>
+                  <Select value={auditCategory} onValueChange={setAuditCategory}>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder={t("All Categories")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("All Categories")}</SelectItem>
-                      {activeTab === "audit" ? (
-                        <>
-                          <SelectItem value="auth">{t("Authentication")}</SelectItem>
-                          <SelectItem value="user">{t("User")}</SelectItem>
-                          <SelectItem value="content">{t("Content")}</SelectItem>
-                          <SelectItem value="system">{t("System")}</SelectItem>
-                          <SelectItem value="admin">{t("Admin")}</SelectItem>
-                        </>
-                      ) : (
-                        <>
-                          <SelectItem value="access">{t("Access")}</SelectItem>
-                          <SelectItem value="authentication">{t("Authentication")}</SelectItem>
-                          <SelectItem value="data">{t("Data")}</SelectItem>
-                          <SelectItem value="system">{t("System")}</SelectItem>
-                        </>
-                      )}
+                      <SelectGroup>
+                        <SelectItem value="all">{t("All Categories")}</SelectItem>
+                        <SelectItem value="authentication">{t("Authentication")}</SelectItem>
+                        <SelectItem value="user">{t("User")}</SelectItem>
+                        <SelectItem value="content">{t("Content")}</SelectItem>
+                        <SelectItem value="admin">{t("Admin")}</SelectItem>
+                        <SelectItem value="access">{t("Access")}</SelectItem>
+                        <SelectItem value="data">{t("Data")}</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
-                  
-                  <Select
-                    value={filters.severity}
-                    onValueChange={(value) => setFilters({...filters, severity: value})}
-                  >
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue placeholder={t("Severity")} />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="severity">{t("Severity")}</Label>
+                  <Select value={auditSeverity} onValueChange={setAuditSeverity}>
+                    <SelectTrigger id="severity">
+                      <SelectValue placeholder={t("All Levels")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("All Levels")}</SelectItem>
-                      {activeTab === "audit" ? (
-                        <>
-                          <SelectItem value="info">{t("Info")}</SelectItem>
-                          <SelectItem value="warning">{t("Warning")}</SelectItem>
-                          <SelectItem value="critical">{t("Critical")}</SelectItem>
-                        </>
-                      ) : (
-                        <>
-                          <SelectItem value="low">{t("Low")}</SelectItem>
-                          <SelectItem value="medium">{t("Medium")}</SelectItem>
-                          <SelectItem value="high">{t("High")}</SelectItem>
-                          <SelectItem value="critical">{t("Critical")}</SelectItem>
-                        </>
-                      )}
+                      <SelectGroup>
+                        <SelectItem value="all">{t("All Levels")}</SelectItem>
+                        <SelectItem value="low">{t("Low")}</SelectItem>
+                        <SelectItem value="medium">{t("Medium")}</SelectItem>
+                        <SelectItem value="high">{t("High")}</SelectItem>
+                        <SelectItem value="critical">{t("Critical")}</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
-                  
-                  {activeTab === "audit" && (
-                    <Select
-                      value={filters.status || "all"}
-                      onValueChange={(value) => setFilters({...filters, status: value})}
-                    >
-                      <SelectTrigger className="w-[130px]">
-                        <SelectValue placeholder={t("Status")} />
-                      </SelectTrigger>
-                      <SelectContent>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="status">{t("Status")}</Label>
+                  <Select value={auditStatus} onValueChange={setAuditStatus}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder={t("All Status")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
                         <SelectItem value="all">{t("All Status")}</SelectItem>
                         <SelectItem value="success">{t("Success")}</SelectItem>
                         <SelectItem value="failure">{t("Failure")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2 flex items-end">
+                  <div className="flex space-x-2">
+                    <Button variant="outline" onClick={clearFilters}>
+                      {t("Clear")}
+                    </Button>
+                    <Button variant="outline" onClick={setLast7Days}>
+                      {t("Last 7 days")}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <TabsContent value="audit" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              {isLoadingAuditLogs ? (
-                <div className="flex justify-center items-center h-64">
-                  <RefreshCw className="h-8 w-8 animate-spin text-chess-accent" />
-                </div>
-              ) : filteredAuditLogs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-chess-text-light/60">
-                  <History className="h-16 w-16 mb-4 opacity-20" />
-                  <h3 className="text-xl font-medium">{t("No audit logs found")}</h3>
-                  <p className="text-sm mt-1">{t("Try changing your filters or date range")}</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[600px]">
-                  <Table>
-                    <TableHeader>
+          
+          {/* Audit Logs Tab */}
+          <TabsContent value="audit" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Timestamp")}</TableHead>
+                      <TableHead>{t("User")}</TableHead>
+                      <TableHead>{t("Action")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Category")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Status")}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t("Severity")}</TableHead>
+                      <TableHead>{t("Details")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedAuditLogs.length > 0 ? (
+                      paginatedAuditLogs.map((log) => (
+                        <TableRow key={log.id} className="cursor-pointer hover:bg-muted/50" onClick={() => viewLogDetails(log)}>
+                          <TableCell className="font-mono text-xs">
+                            {format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+                          </TableCell>
+                          <TableCell>{log.username}</TableCell>
+                          <TableCell>{log.action}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex items-center">
+                              {getCategoryIcon(log.category)}
+                              <span className="ml-2">{log.category}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{getStatusBadge(log.status)}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{getSeverityBadge(log.severity)}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" onClick={(e) => {
+                              e.stopPropagation();
+                              viewLogDetails(log);
+                            }}>
+                              {t("View")}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
-                        <TableHead className="w-[200px]">{t("Action")}</TableHead>
-                        <TableHead>{t("User")}</TableHead>
-                        <TableHead>{t("Timestamp")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Category")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Severity")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Status")}</TableHead>
-                        <TableHead className="text-right">{t("Details")}</TableHead>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <p className="text-muted-foreground">{t("No audit logs found")}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {t("Try changing your filters or date range")}
+                            </p>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <AnimatePresence>
-                        {filteredAuditLogs.map((log) => (
-                          <motion.tr
-                            key={log.id}
-                            variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className={`border-b hover:bg-chess-accent/5 transition-colors ${expandedLog === log.id ? 'bg-chess-accent/5' : ''}`}
+                    )}
+                  </TableBody>
+                </Table>
+                
+                {totalAuditPages > 1 && (
+                  <Pagination className="mt-4">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setAuditPage(Math.max(1, auditPage - 1))}
+                          aria-disabled={auditPage === 1}
+                          className={auditPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalAuditPages }).map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => setAuditPage(i + 1)}
+                            isActive={auditPage === i + 1}
                           >
-                            <TableCell className="font-medium">{log.action}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span>{log.userName}</span>
-                                <span className="text-xs text-chess-text-light/70">{log.userEmail}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span>{formatDate(log.timestamp)}</span>
-                                <span className="text-xs text-chess-text-light/70">{log.ipAddress}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{log.category}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={
-                                  log.severity === "info" ? "secondary" : 
-                                  log.severity === "warning" ? "default" : 
-                                  "destructive"
-                                }
-                              >
-                                {log.severity}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={log.status === "success" ? "outline" : "destructive"}
-                              >
-                                {log.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                              >
-                                {expandedLog === log.id ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </TableCell>
-                            
-                            {/* Expanded details row */}
-                            {expandedLog === log.id && (
-                              <tr>
-                                <td colSpan={7} className="bg-chess-accent/5 p-4">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                      <h4 className="font-medium mb-1">{t("Details")}</h4>
-                                      <p className="text-sm">{log.details}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                      <div>
-                                        <h4 className="font-medium">{t("User Agent")}</h4>
-                                        <p className="text-xs font-mono bg-chess-dark/20 p-2 rounded overflow-x-auto">{log.userAgent}</p>
-                                      </div>
-                                      <div>
-                                        <h4 className="font-medium">{t("User ID")}</h4>
-                                        <p className="text-sm">{log.userId}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              {isLoadingSecurityEvents ? (
-                <div className="flex justify-center items-center h-64">
-                  <RefreshCw className="h-8 w-8 animate-spin text-chess-accent" />
-                </div>
-              ) : filteredSecurityEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-chess-text-light/60">
-                  <Shield className="h-16 w-16 mb-4 opacity-20" />
-                  <h3 className="text-xl font-medium">{t("No security events found")}</h3>
-                  <p className="text-sm mt-1">{t("Try changing your filters or date range")}</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[600px]">
-                  <Table>
-                    <TableHeader>
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setAuditPage(Math.min(totalAuditPages, auditPage + 1))}
+                          aria-disabled={auditPage === totalAuditPages}
+                          className={auditPage === totalAuditPages ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Security Events Tab */}
+          <TabsContent value="security" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Timestamp")}</TableHead>
+                      <TableHead>{t("Event")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Category")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Status")}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t("Severity")}</TableHead>
+                      <TableHead>{t("Details")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedSecurityEvents.length > 0 ? (
+                      paginatedSecurityEvents.map((event) => (
+                        <TableRow key={event.id} className="cursor-pointer hover:bg-muted/50" onClick={() => viewEventDetails(event)}>
+                          <TableCell className="font-mono text-xs">
+                            {format(new Date(event.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+                          </TableCell>
+                          <TableCell>{event.event}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex items-center">
+                              {getCategoryIcon(event.category)}
+                              <span className="ml-2">{event.category}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{getStatusBadge(event.status)}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{getSeverityBadge(event.severity)}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" onClick={(e) => {
+                              e.stopPropagation();
+                              viewEventDetails(event);
+                            }}>
+                              {t("View")}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
-                        <TableHead className="w-[200px]">{t("Event")}</TableHead>
-                        <TableHead>{t("Source")}</TableHead>
-                        <TableHead>{t("Timestamp")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Category")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Severity")}</TableHead>
-                        <TableHead className="w-[100px]">{t("Status")}</TableHead>
-                        <TableHead className="text-right">{t("Details")}</TableHead>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <p className="text-muted-foreground">{t("No security events found")}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {t("Try changing your filters or date range")}
+                            </p>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <AnimatePresence>
-                        {filteredSecurityEvents.map((event) => (
-                          <motion.tr
-                            key={event.id}
-                            variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className={`border-b hover:bg-chess-accent/5 transition-colors ${expandedLog === event.id ? 'bg-chess-accent/5' : ''}`}
+                    )}
+                  </TableBody>
+                </Table>
+                
+                {totalEventPages > 1 && (
+                  <Pagination className="mt-4">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setEventPage(Math.max(1, eventPage - 1))}
+                          aria-disabled={eventPage === 1}
+                          className={eventPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalEventPages }).map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => setEventPage(i + 1)}
+                            isActive={eventPage === i + 1}
                           >
-                            <TableCell className="font-medium">{event.event}</TableCell>
-                            <TableCell>{event.source}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span>{formatDate(event.timestamp)}</span>
-                                <span className="text-xs text-chess-text-light/70">{event.ipAddress}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{event.category}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={
-                                  event.severity === "low" ? "secondary" : 
-                                  event.severity === "medium" ? "outline" : 
-                                  event.severity === "high" ? "default" : 
-                                  "destructive"
-                                }
-                              >
-                                {event.severity}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={event.resolved ? "outline" : "destructive"}
-                              >
-                                {event.resolved ? t("Resolved") : t("Open")}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setExpandedLog(expandedLog === event.id ? null : event.id)}
-                              >
-                                {expandedLog === event.id ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </TableCell>
-                            
-                            {/* Expanded details row */}
-                            {expandedLog === event.id && (
-                              <tr>
-                                <td colSpan={7} className="bg-chess-accent/5 p-4">
-                                  <div className="grid grid-cols-1 gap-4">
-                                    <div>
-                                      <h4 className="font-medium mb-1">{t("Details")}</h4>
-                                      <p className="text-sm">{event.details}</p>
-                                    </div>
-                                    {!event.resolved && (
-                                      <div className="flex justify-end">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            // TODO: Implement event resolution functionality
-                                            console.log("Resolving security event:", event.id);
-                                            // In a real implementation, this would call an API
-                                            toast.success(t("Event marked as resolved"));
-                                          }}
-                                        >
-                                          {t("Mark as Resolved")}
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </motion.div>
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setEventPage(Math.min(totalEventPages, eventPage + 1))}
+                          aria-disabled={eventPage === totalEventPages}
+                          className={eventPage === totalEventPages ? 'pointer-events-none opacity-50' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        
+        {/* Audit Log Details Dialog */}
+        <Dialog open={isLogDetailsOpen} onOpenChange={setIsLogDetailsOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{t("Audit Log Details")}</DialogTitle>
+              <DialogDescription>
+                {selectedLog && format(new Date(selectedLog.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedLog && (
+              <ScrollArea className="max-h-[400px] mt-4">
+                <div className="space-y-4 p-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("User ID")}</h4>
+                      <p className="mt-1">{selectedLog.userId}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Username")}</h4>
+                      <p className="mt-1">{selectedLog.username}</p>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">{t("Action")}</h4>
+                    <p className="mt-1">{selectedLog.action}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Category")}</h4>
+                      <div className="mt-1 flex items-center">
+                        {getCategoryIcon(selectedLog.category)}
+                        <span className="ml-2">{selectedLog.category}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Status")}</h4>
+                      <div className="mt-1">{getStatusBadge(selectedLog.status)}</div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Severity")}</h4>
+                      <div className="mt-1">{getSeverityBadge(selectedLog.severity)}</div>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">{t("Details")}</h4>
+                    <p className="mt-1 text-sm">{selectedLog.details}</p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("IP Address")}</h4>
+                      <p className="mt-1 font-mono text-sm">{selectedLog.ipAddress}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Timestamp")}</h4>
+                      <p className="mt-1 font-mono text-sm">
+                        {format(new Date(selectedLog.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">{t("User Agent")}</h4>
+                    <p className="mt-1 text-xs font-mono break-all">{selectedLog.userAgent}</p>
+                  </div>
+                </div>
+              </ScrollArea>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Security Event Details Dialog */}
+        <Dialog open={isEventDetailsOpen} onOpenChange={setIsEventDetailsOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{t("Security Event Details")}</DialogTitle>
+              <DialogDescription>
+                {selectedEvent && format(new Date(selectedEvent.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+              </DialogDescription>
+            </DialogHeader>
+            {selectedEvent && (
+              <ScrollArea className="max-h-[400px] mt-4">
+                <div className="space-y-4 p-2">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">{t("Event")}</h4>
+                    <p className="mt-1">{selectedEvent.event}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Category")}</h4>
+                      <div className="mt-1 flex items-center">
+                        {getCategoryIcon(selectedEvent.category)}
+                        <span className="ml-2">{selectedEvent.category}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Status")}</h4>
+                      <div className="mt-1">{getStatusBadge(selectedEvent.status)}</div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Severity")}</h4>
+                      <div className="mt-1">{getSeverityBadge(selectedEvent.severity)}</div>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">{t("Details")}</h4>
+                    <p className="mt-1 text-sm">{selectedEvent.details}</p>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedEvent.userId && (
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground">{t("User ID")}</h4>
+                        <p className="mt-1">{selectedEvent.userId}</p>
+                      </div>
+                    )}
+                    {selectedEvent.username && (
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground">{t("Username")}</h4>
+                        <p className="mt-1">{selectedEvent.username}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("IP Address")}</h4>
+                      <p className="mt-1 font-mono text-sm">{selectedEvent.ipAddress}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground">{t("Source")}</h4>
+                      <p className="mt-1">{selectedEvent.source}</p>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-end">
+                    {selectedEvent.status === 'open' && (
+                      <Button 
+                        onClick={() => markEventAsResolved(selectedEvent.id)}
+                        className="flex items-center"
+                      >
+                        <Check className="size-4 mr-2" />
+                        {t("Mark as Resolved")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </ScrollArea>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </PageTransition>
   );
 };
 
