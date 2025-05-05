@@ -1,135 +1,281 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./components/layout/Layout";
+import AdminLayout from "./components/admin/AdminLayout";
 import { LanguageProvider } from "./contexts/LanguageContext";
-import PageTransition from "./components/common/PageTransition";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Page imports 
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Store from "./pages/Store";
 import Play from "./pages/Play";
 import Learn from "./pages/Learn";
-import Community from "./pages/Community";
+import Game from "./pages/Game";
+import Store from "./pages/Store";
 import SmartBoard from "./pages/SmartBoard";
-import Accessories from "./pages/Accessories";
-import GiftCards from "./pages/GiftCards";
-import Courses from "./pages/Courses";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
+import Dashboard from "./pages/Dashboard";
+import Analysis from "./pages/Analysis";
+import Spectate from "./pages/Spectate";
+import Community from "./pages/Community";
+import Tournaments from "./pages/Tournaments";
 import Puzzles from "./pages/Puzzles";
+import Courses from "./pages/Courses";
 import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
-import Game from "./pages/Game";
-import Tournaments from "./pages/Tournaments";
-import Analysis from "./pages/Analysis";
-import Spectate from "./pages/Spectate";
+import Accessories from "./pages/Accessories";
+import GiftCards from "./pages/GiftCards";
 
-// Admin Components
-import AdminLayout from "./components/admin/AdminLayout";
+// Admin page imports
 import AdminDashboard from "./pages/admin/Dashboard";
-import UserManagement from "./pages/admin/UserManagement";
-import GameManagement from "./pages/admin/GameManagement";
-import TournamentManager from "./pages/admin/TournamentManager";
-import CoursesCMS from "./pages/admin/CoursesCMS";
-import PuzzlesCMS from "./pages/admin/PuzzlesCMS";
-import PuzzleManagement from "./pages/admin/PuzzleManagement";
-import ContentPages from "./pages/admin/ContentPages";
-import OrdersPayments from "./pages/admin/OrdersPayments";
-import SmartBoardFleet from "./pages/admin/SmartBoardFleet";
-import LocalizationManagement from "./pages/admin/LocalizationManagement";
-import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
-import RealTimeLogs from "./pages/admin/RealTimeLogs";
-import Notifications from "./pages/admin/Notifications";
-import Analytics from "./pages/admin/Analytics";
+import AdminUserManagement from "./pages/admin/UserManagement";
+import AdminGameManagement from "./pages/admin/GameManagement";
+import AdminTournamentManager from "./pages/admin/TournamentManager";
+import AdminCoursesCMS from "./pages/admin/CoursesCMS";
+import AdminPuzzleManagement from "./pages/admin/PuzzleManagement";
+import AdminContentPages from "./pages/admin/ContentPages";
+import AdminOrdersPayments from "./pages/admin/OrdersPayments";
+import AdminSmartBoardFleet from "./pages/admin/SmartBoardFleet";
+import AdminNotifications from "./pages/admin/Notifications";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminRealTimeLogs from "./pages/admin/RealTimeLogs";
+import AdminLocalizationManagement from "./pages/admin/LocalizationManagement";
+import AdminIntegrationsManagement from "./pages/admin/IntegrationsManagement";
+import AdminSoundAndAssets from "./pages/admin/SoundAndAssets";
+import AdminRolesAndPermissions from "./pages/admin/RolesAndPermissions";
+import AdminSecurityAudit from "./pages/admin/SecurityAudit";
 
-// Create a new QueryClient instance
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-// Enhanced AppRoutes component with page transitions
-const AppRoutes = () => {
-  const location = useLocation();
-
+const App: React.FC = () => {
   return (
-    <LanguageProvider>
-      <Routes location={location}>
-        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-        <Route path="/store" element={<PageTransition><Store /></PageTransition>} />
-        <Route path="/play" element={<PageTransition><Play /></PageTransition>} />
-        <Route path="/game/:gameId" element={<PageTransition><Game /></PageTransition>} />
-        <Route path="/learn" element={<PageTransition><Learn /></PageTransition>} />
-        <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
-        <Route path="/smart-board" element={<PageTransition><SmartBoard /></PageTransition>} />
-        <Route path="/accessories" element={<PageTransition><Accessories /></PageTransition>} />
-        <Route path="/gift-cards" element={<PageTransition><GiftCards /></PageTransition>} />
-        <Route path="/courses" element={<PageTransition><Courses /></PageTransition>} />
-        <Route path="/puzzles" element={<PageTransition><Puzzles /></PageTransition>} />
-        <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
-        <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
-        <Route path="/terms" element={<PageTransition><TermsOfService /></PageTransition>} />
-        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
-        <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
-        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-        <Route path="/tournaments" element={<PageTransition><Tournaments /></PageTransition>} />
-        <Route path="/tournaments/:tournamentId" element={<PageTransition><Tournaments /></PageTransition>} />
-        <Route path="/analysis" element={<PageTransition><Analysis /></PageTransition>} />
-        <Route path="/spectate" element={<PageTransition><Spectate /></PageTransition>} />
-        <Route path="/spectate/game/:gameId" element={<PageTransition><Game /></PageTransition>} />
-        
-        {/* Admin Routes - no need to wrap content in PageTransition since AdminLayout already includes it */}
-        <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-        <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
-        <Route path="/admin/games" element={<AdminLayout><GameManagement /></AdminLayout>} />
-        <Route path="/admin/tournaments" element={<AdminLayout><TournamentManager /></AdminLayout>} />
-        <Route path="/admin/courses" element={<AdminLayout><CoursesCMS /></AdminLayout>} />
-        <Route path="/admin/puzzles" element={<AdminLayout><PuzzleManagement /></AdminLayout>} />
-        <Route path="/admin/content" element={<AdminLayout><ContentPages /></AdminLayout>} />
-        <Route path="/admin/orders" element={<AdminLayout><OrdersPayments /></AdminLayout>} />
-        <Route path="/admin/smartboards" element={<AdminLayout><SmartBoardFleet /></AdminLayout>} />
-        <Route path="/admin/localization" element={<AdminLayout><LocalizationManagement /></AdminLayout>} />
-        <Route path="/admin/integrations" element={<AdminLayout><IntegrationsManagement /></AdminLayout>} />
-        <Route path="/admin/logs" element={<AdminLayout><RealTimeLogs /></AdminLayout>} />
-        <Route path="/admin/notifications" element={<AdminLayout><Notifications /></AdminLayout>} />
-        <Route path="/admin/analytics" element={<AdminLayout><Analytics /></AdminLayout>} />
-        
-        {/* Other admin routes */}
-        <Route path="/admin/assets" element={<AdminLayout><div className="p-6 text-chess-text-light">Sound & Asset Library</div></AdminLayout>} />
-        <Route path="/admin/roles" element={<AdminLayout><div className="p-6 text-chess-text-light">Roles & Permissions Control</div></AdminLayout>} />
-        <Route path="/admin/security" element={<AdminLayout><div className="p-6 text-chess-text-light">Security & Audit Logs</div></AdminLayout>} />
-        <Route path="/admin/health" element={<AdminLayout><div className="p-6 text-chess-text-light">System Health Monitor</div></AdminLayout>} />
-        <Route path="/admin/backup" element={<AdminLayout><div className="p-6 text-chess-text-light">Backup & Restore</div></AdminLayout>} />
-        <Route path="/admin/features" element={<AdminLayout><div className="p-6 text-chess-text-light">Feature Flags Management</div></AdminLayout>} />
-        <Route path="/admin/help" element={<AdminLayout><div className="p-6 text-chess-text-light">Help & Support Center</div></AdminLayout>} />
-        <Route path="/admin/profile" element={<AdminLayout><div className="p-6 text-chess-text-light">Admin Profile</div></AdminLayout>} />
-        
-        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-      </Routes>
-    </LanguageProvider>
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <Router>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Layout>
+                  <Index />
+                </Layout>
+              }
+            />
+            
+            {/* Main Routes */}
+            <Route
+              path="/play"
+              element={
+                <Layout>
+                  <Play />
+                </Layout>
+              }
+            />
+            <Route
+              path="/learn"
+              element={
+                <Layout>
+                  <Learn />
+                </Layout>
+              }
+            />
+            <Route
+              path="/game/:id"
+              element={
+                <Layout>
+                  <Game />
+                </Layout>
+              }
+            />
+            <Route
+              path="/store"
+              element={
+                <Layout>
+                  <Store />
+                </Layout>
+              }
+            />
+            <Route
+              path="/store/accessories"
+              element={
+                <Layout>
+                  <Accessories />
+                </Layout>
+              }
+            />
+            <Route
+              path="/store/gift-cards"
+              element={
+                <Layout>
+                  <GiftCards />
+                </Layout>
+              }
+            />
+            <Route
+              path="/smart-board"
+              element={
+                <Layout>
+                  <SmartBoard />
+                </Layout>
+              }
+            />
+            <Route
+              path="/analysis"
+              element={
+                <Layout>
+                  <Analysis />
+                </Layout>
+              }
+            />
+            <Route
+              path="/spectate"
+              element={
+                <Layout>
+                  <Spectate />
+                </Layout>
+              }
+            />
+            <Route
+              path="/community"
+              element={
+                <Layout>
+                  <Community />
+                </Layout>
+              }
+            />
+            <Route
+              path="/tournaments"
+              element={
+                <Layout>
+                  <Tournaments />
+                </Layout>
+              }
+            />
+            <Route
+              path="/puzzles"
+              element={
+                <Layout>
+                  <Puzzles />
+                </Layout>
+              }
+            />
+            <Route
+              path="/courses"
+              element={
+                <Layout>
+                  <Courses />
+                </Layout>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <Layout>
+                  <Login />
+                </Layout>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <Layout>
+                  <Signup />
+                </Layout>
+              }
+            />
+            <Route
+              path="/onboarding"
+              element={
+                <Layout>
+                  <Onboarding />
+                </Layout>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <Layout>
+                  <FAQ />
+                </Layout>
+              }
+            />
+            <Route
+              path="/privacy-policy"
+              element={
+                <Layout>
+                  <PrivacyPolicy />
+                </Layout>
+              }
+            />
+            <Route
+              path="/terms-of-service"
+              element={
+                <Layout>
+                  <TermsOfService />
+                </Layout>
+              }
+            />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUserManagement />} />
+              <Route path="games" element={<AdminGameManagement />} />
+              <Route path="tournaments" element={<AdminTournamentManager />} />
+              <Route path="courses" element={<AdminCoursesCMS />} />
+              <Route path="puzzles" element={<AdminPuzzleManagement />} />
+              <Route path="content" element={<AdminContentPages />} />
+              <Route path="orders" element={<AdminOrdersPayments />} />
+              <Route path="smartboard" element={<AdminSmartBoardFleet />} />
+              <Route path="notifications" element={<AdminNotifications />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="logs" element={<AdminRealTimeLogs />} />
+              <Route path="localization" element={<AdminLocalizationManagement />} />
+              <Route path="integrations" element={<AdminIntegrationsManagement />} />
+              <Route path="sound-assets" element={<AdminSoundAndAssets />} />
+              <Route path="roles-permissions" element={<AdminRolesAndPermissions />} />
+              <Route path="security" element={<AdminSecurityAudit />} />
+            </Route>
+            
+            {/* 404 Route */}
+            <Route
+              path="*"
+              element={
+                <Layout>
+                  <NotFound />
+                </Layout>
+              }
+            />
+          </Routes>
+        </Router>
+        <Toaster />
+        <SonnerToaster position="top-right" />
+      </LanguageProvider>
+    </QueryClientProvider>
   );
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
 
 export default App;

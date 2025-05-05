@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { notificationsApi, NewNotification } from "@/services/api/endpoints/notificationsApi";
@@ -520,7 +519,7 @@ const Notifications: React.FC = () => {
               
               <Select
                 value={typeFilter}
-                onValueChange={(v) => setTypeFilter(v as NotificationType)}
+                onValueChange={(v) => setTypeFilter(v as DisplayNotificationType)}
               >
                 <SelectTrigger className="w-32">
                   <Filter className="h-4 w-4 mr-2" />
