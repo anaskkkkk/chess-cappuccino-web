@@ -64,54 +64,54 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   
   const adminMenuItems = [
     {
-      label: "Core",
+      label: "coreSection",
       items: [
-        { title: "Dashboard", path: "/admin", icon: LayoutDashboard },
-        { title: "User Management", path: "/admin/users", icon: Users },
-        { title: "Game Management", path: "/admin/games", icon: Gamepad },
-        { title: "Tournament Manager", path: "/admin/tournaments", icon: Trophy },
+        { title: "dashboardPage", path: "/admin", icon: LayoutDashboard },
+        { title: "userManagementPage", path: "/admin/users", icon: Users },
+        { title: "gameManagementPage", path: "/admin/games", icon: Gamepad },
+        { title: "tournamentManagerPage", path: "/admin/tournaments", icon: Trophy },
       ]
     },
     {
-      label: "Content",
+      label: "contentSection",
       items: [
-        { title: "Courses", path: "/admin/courses", icon: BookOpen },
-        { title: "Puzzles", path: "/admin/puzzles", icon: BookCopy }, // Changed icon here
-        { title: "Content Pages", path: "/admin/content", icon: FileText },
+        { title: "coursesPage", path: "/admin/courses", icon: BookOpen },
+        { title: "puzzlesPage", path: "/admin/puzzles", icon: BookCopy }, // Changed icon here
+        { title: "contentPagesPage", path: "/admin/content", icon: FileText },
       ]
     },
     {
-      label: "Business",
+      label: "businessSection",
       items: [
-        { title: "Orders & Payments", path: "/admin/orders", icon: ShoppingCart },
+        { title: "ordersAndPaymentsPage", path: "/admin/orders", icon: ShoppingCart },
       ]
     },
     {
-      label: "Hardware",
+      label: "hardwareSection",
       items: [
-        { title: "SmartBoard Fleet", path: "/admin/smartboards", icon: HardDrive },
+        { title: "smartBoardFleetPage", path: "/admin/smartboards", icon: HardDrive },
       ]
     },
     {
-      label: "Monitoring",
+      label: "monitoringSection",
       items: [
-        { title: "Real-Time Logs", path: "/admin/logs", icon: FileTerminal },
-        { title: "Notifications", path: "/admin/notifications", icon: Bell },
-        { title: "Analytics", path: "/admin/analytics", icon: BarChart },
+        { title: "realTimeLogsPage", path: "/admin/logs", icon: FileTerminal },
+        { title: "notificationsPage", path: "/admin/notifications", icon: Bell },
+        { title: "analyticsPage", path: "/admin/analytics", icon: BarChart },
       ]
     },
     {
-      label: "Settings",
+      label: "settingsSection",
       items: [
-        { title: "Localization", path: "/admin/localization", icon: Languages },
-        { title: "Integrations", path: "/admin/integrations", icon: Plug },
-        { title: "Sound & Assets", path: "/admin/assets", icon: Music },
-        { title: "Roles & Permissions", path: "/admin/roles", icon: ShieldCheck },
-        { title: "Security & Audit", path: "/admin/security", icon: Lock },
-        { title: "System Health", path: "/admin/health", icon: Activity },
-        { title: "Backup & Restore", path: "/admin/backup", icon: Save },
-        { title: "Feature Flags", path: "/admin/features", icon: Flag },
-        { title: "Help & Support", path: "/admin/help", icon: HelpCircle },
+        { title: "localizationPage", path: "/admin/localization", icon: Languages },
+        { title: "integrationsPage", path: "/admin/integrations", icon: Plug },
+        { title: "soundAndAssetsPage", path: "/admin/assets", icon: Music },
+        { title: "rolesAndPermissionsPage", path: "/admin/roles", icon: ShieldCheck },
+        { title: "securityAndAuditPage", path: "/admin/security", icon: Lock },
+        { title: "systemHealthPage", path: "/admin/health", icon: Activity },
+        { title: "backupAndRestorePage", path: "/admin/backup", icon: Save },
+        { title: "featureFlagsPage", path: "/admin/features", icon: Flag },
+        { title: "helpAndSupportPage", path: "/admin/help", icon: HelpCircle },
       ]
     }
   ];
