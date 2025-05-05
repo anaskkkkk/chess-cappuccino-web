@@ -1,155 +1,213 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLanguageContext } from "@/contexts/LanguageContext";
-import { websocketApi } from "@/services/api/endpoints/websocketApi";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DownloadCloud,
-  Filter,
-  Play,
-  Pause,
-  RefreshCw,
-  Search,
-  Plus,
-} from "lucide-react";
-import useWebSocket from "@/hooks/useWebSocket";
+import { useQuery } from "@tanstack/react-query";
+import { useLanguageContext } from "@/contexts/LanguageContext";
+import useWebSocket, { ConnectionStatus } from "@/hooks/useWebSocket";
 import { WebSocketMessageType } from "@/services/websocketService";
+import { websocketApi } from "@/services/api/endpoints/websocketApi";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { 
+  Activity, 
+  AlertCircle, 
+  Clock, 
+  Download, 
+  Eye, 
+  Filter, 
+  Search, 
+  Terminal, 
+  Wifi, 
+  WifiOff 
+} from "lucide-react";
+import {
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger
+} from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
-// Log entry type definition
-type LogEntry = {
+interface Log {
   id: string;
   timestamp: string;
   level: "info" | "warning" | "error" | "debug";
-  message: string;
   source: string;
-  details?: Record<string, any>;
+  message: string;
+  details?: any;
+}
+
+const LogItem: React.FC<{ log: Log }> = ({ log }) => {
+  const [expanded, setExpanded] = useState(false);
+  const { t } = useLanguageContext();
+  
+  // Get icon based on log level
+  const getIcon = () => {
+    switch (log.level) {
+      case "error": return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "warning": return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      case "info": return <Activity className="h-4 w-4 text-blue-500" />;
+      case "debug": return <Terminal className="h-4 w-4 text-green-500" />;
+      default: return <Eye className="h-4 w-4" />;
+    }
+  };
+  
+  // Get badge color based on log level
+  const getBadgeVariant = () => {
+    switch (log.level) {
+      case "error": return "destructive";
+      case "warning": return "outline";
+      case "info": return "default";
+      case "debug": return "secondary";
+      default: return "outline";
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: -10 }} 
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="border-b border-gray-700 py-2"
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          {getIcon()}
+          <span className="font-mono text-xs text-gray-400">
+            {new Date(log.timestamp).toLocaleTimeString()}
+          </span>
+          <Badge variant={getBadgeVariant()} className="ml-2 text-xs">
+            {log.level.toUpperCase()}
+          </Badge>
+          <span className="ml-2 text-sm text-gray-300">{log.source}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {log.details && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 px-2"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? t("Collapse") : t("Expand")}
+            </Button>
+          )}
+        </div>
+      </div>
+      
+      <div className="mt-1 text-sm">{log.message}</div>
+      
+      {expanded && log.details && (
+        <div className="mt-2 p-2 bg-gray-800 rounded font-mono text-xs overflow-auto max-h-40">
+          <pre>{JSON.stringify(log.details, null, 2)}</pre>
+        </div>
+      )}
+    </motion.div>
+  );
 };
 
-const RealTimeLogs = () => {
+const RealTimeLogs: React.FC = () => {
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("live");
+  const [page, setPage] = useState(1);
+  const logsEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguageContext();
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [isStreaming, setIsStreaming] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [logLevel, setLogLevel] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("system");
-  const logContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Fetch auth token for WebSocket connection
-  const { data: authTokenData } = useQuery({
+  const { data: authData, isLoading: isLoadingAuth } = useQuery({
     queryKey: ["websocketAuth"],
     queryFn: async () => {
       const response = await websocketApi.getAuthToken();
-      return response.data?.token || null;
-    },
+      setAuthToken(response.token);
+      return response;
+    }
   });
-  
-  // Connect to WebSocket for real-time logs
-  const { isConnected } = useWebSocket<LogEntry>(
-    WebSocketMessageType.SYSTEM_LOG,
-    (data) => {
-      if (isStreaming) {
-        setLogs((prevLogs) => {
-          // Keep only the latest 500 logs to prevent memory issues
-          const updatedLogs = [...prevLogs, data];
-          return updatedLogs.slice(Math.max(0, updatedLogs.length - 500));
-        });
-        
-        // Auto-scroll to bottom if already at bottom
-        if (logContainerRef.current) {
-          const { scrollTop, scrollHeight, clientHeight } = logContainerRef.current;
-          if (scrollHeight - scrollTop <= clientHeight + 50) {
-            setTimeout(() => {
-              if (logContainerRef.current) {
-                logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-              }
-            }, 0);
-          }
-        }
-      }
+
+  // Fetch historical logs
+  const { data: historicalLogs = [], isLoading: isLoadingLogs } = useQuery({
+    queryKey: ["systemLogs", page, filter !== "all" ? filter : undefined],
+    queryFn: async () => {
+      const filters = filter !== "all" ? { level: filter } : {};
+      const response = await websocketApi.getSystemLogs(page, 50, filters);
+      return response.data || [];
     },
-    {
-      authToken: authTokenData,
-      channel: activeTab,
-      onOpen: () => {
-        toast.success(t("Connected to log server"));
-      },
-      onClose: () => {
-        toast.error(t("Disconnected from log server"));
-      },
+    enabled: activeTab === "history"
+  });
+
+  // Connect to WebSocket for real-time logs
+  const { status, isConnected } = useWebSocket<Log>(
+    WebSocketMessageType.SYSTEM_LOG,
+    (log) => {
+      setLogs(prevLogs => {
+        const newLogs = [...prevLogs, log];
+        // Keep only the latest 100 logs to prevent memory issues
+        return newLogs.slice(-100);
+      });
+    },
+    { 
+      authToken: authToken || undefined,
       onError: (error) => {
-        toast.error(`${t("Connection error")}: ${error.message || t("Please try again later")}`);
-      },
+        toast.error(`${t("WebSocket Error")}: ${(error as any).message || t("Connection Failed")}`);
+      }
     }
   );
-  
-  // Fetch initial logs
-  const fetchInitialLogs = async () => {
-    try {
-      const response = await websocketApi.getLogs({ 
-        source: activeTab, 
-        level: logLevel !== "all" ? logLevel : undefined,
-        query: searchQuery || undefined,
-        limit: 100 
-      });
-      setLogs(response.data || []);
-    } catch (error) {
-      toast.error(t("Failed to fetch logs"));
-    }
-  };
-  
-  // Effect for tab changes
+
+  // Scroll to bottom on new logs
   useEffect(() => {
-    fetchInitialLogs();
-  }, [activeTab]);
-  
-  // Filter logs based on current filter settings
-  const filteredLogs = logs.filter((log) => {
-    // Filter by log level
-    if (logLevel !== "all" && log.level !== logLevel) return false;
-    
-    // Filter by search query
-    if (searchQuery && !log.message.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !log.source.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+    if (logs.length > 0 && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
+  }, [logs]);
+
+  // Filter logs based on level and search text
+  const filteredLogs = logs.filter(log => {
+    const matchesFilter = filter === "all" || log.level === filter;
+    const matchesSearch = search === "" || 
+      log.message.toLowerCase().includes(search.toLowerCase()) || 
+      log.source.toLowerCase().includes(search.toLowerCase());
     
-    return true;
+    return matchesFilter && matchesSearch;
   });
-  
-  // Get log level badge color
-  const getLogLevelBadge = (level: string) => {
-    switch (level) {
-      case "error":
-        return <Badge variant="destructive">{level}</Badge>;
-      case "warning":
-        return <Badge variant="warning" className="bg-yellow-500">{level}</Badge>;
-      case "info":
-        return <Badge variant="secondary">{level}</Badge>;
-      case "debug":
-        return <Badge variant="outline">{level}</Badge>;
-      default:
-        return <Badge>{level}</Badge>;
+
+  // Get the status indicator based on the WebSocket connection status
+  const getStatusIndicator = () => {
+    if (status === "connected") {
+      return (
+        <div className="flex items-center text-green-500">
+          <Wifi className="h-4 w-4 mr-1" />
+          <span className="text-xs">{t("Connected")}</span>
+        </div>
+      );
     }
+    
+    if (status === "connecting") {
+      return (
+        <div className="flex items-center text-amber-500">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+          >
+            <Activity className="h-4 w-4 mr-1" />
+          </motion.div>
+          <span className="text-xs">{t("Connecting")}</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center text-red-500">
+        <WifiOff className="h-4 w-4 mr-1" />
+        <span className="text-xs">{t("Disconnected")}</span>
+      </div>
+    );
   };
-  
-  // Format timestamp
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
-  };
-  
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -160,242 +218,172 @@ const RealTimeLogs = () => {
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => setIsStreaming(!isStreaming)}
-          >
-            {isStreaming ? (
-              <>
-                <Pause className="h-4 w-4" />
-                <span>{t("Pause")}</span>
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4" />
-                <span>{t("Resume")}</span>
-              </>
-            )}
-          </Button>
+        <div className="flex items-center gap-2">
+          {getStatusIndicator()}
           
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-1"
-            onClick={fetchInitialLogs}
+            onClick={() => {
+              const timestamp = new Date().toISOString().replace(/:/g, "-");
+              const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `system-logs-${timestamp}.json`;
+              a.click();
+            }}
+            disabled={logs.length === 0}
           >
-            <RefreshCw className="h-4 w-4" />
-            <span>{t("Refresh")}</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-          >
-            <DownloadCloud className="h-4 w-4" />
-            <span>{t("Export")}</span>
+            <Download className="h-4 w-4 mr-1" />
+            {t("Export")}
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left sidebar with filters */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("Filters")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="search">
-                  {t("Search")}
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="search"
-                    className="pl-8"
-                    placeholder={t("Search logs...")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="level">
-                  {t("Log Level")}
-                </label>
-                <Select value={logLevel} onValueChange={setLogLevel}>
-                  <SelectTrigger id="level">
-                    <SelectValue placeholder={t("Select level")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("All Levels")}</SelectItem>
-                    <SelectItem value="error">{t("Error")}</SelectItem>
-                    <SelectItem value="warning">{t("Warning")}</SelectItem>
-                    <SelectItem value="info">{t("Info")}</SelectItem>
-                    <SelectItem value="debug">{t("Debug")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  {t("Quick Filters")}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => setLogLevel("error")}
-                  >
-                    {t("Errors")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => setSearchQuery("auth")}
-                  >
-                    {t("Auth")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => setSearchQuery("api")}
-                  >
-                    {t("API")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs flex items-center"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    {t("Custom")}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="pt-2">
-                <p className="text-sm flex items-center mb-2">
-                  <Filter className="h-4 w-4 mr-1" />
-                  {t("Active Filters")}
-                </p>
-                {(searchQuery || logLevel !== "all") ? (
-                  <div className="space-y-1">
-                    {searchQuery && (
-                      <div className="flex items-center justify-between bg-gray-800/30 px-2 py-1 rounded text-sm">
-                        <span>{t("Search")}: {searchQuery}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-5 w-5 p-0" 
-                          onClick={() => setSearchQuery("")}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    )}
-                    {logLevel !== "all" && (
-                      <div className="flex items-center justify-between bg-gray-800/30 px-2 py-1 rounded text-sm">
-                        <span>{t("Level")}: {logLevel}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-5 w-5 p-0" 
-                          onClick={() => setLogLevel("all")}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 italic">
-                    {t("No active filters")}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex flex-col sm:flex-row justify-between mb-4 gap-4">
+          <TabsList>
+            <TabsTrigger value="live">{t("Live Logs")}</TabsTrigger>
+            <TabsTrigger value="history">{t("Historical")}</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative w-full sm:w-60">
+              <Search className="h-4 w-4 absolute top-2.5 left-2 text-gray-400" />
+              <Input
+                placeholder={t("Search logs...")}
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder={t("Filter")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("All Levels")}</SelectItem>
+                <SelectItem value="info">{t("Info")}</SelectItem>
+                <SelectItem value="warning">{t("Warning")}</SelectItem>
+                <SelectItem value="error">{t("Error")}</SelectItem>
+                <SelectItem value="debug">{t("Debug")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
-        {/* Right side - logs display */}
-        <div className="lg:col-span-3">
-          <Card className="h-[700px] flex flex-col">
-            <CardHeader className="p-3 border-b">
-              <Tabs defaultValue="system" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-4">
-                  <TabsTrigger value="system">{t("System")}</TabsTrigger>
-                  <TabsTrigger value="api">{t("API")}</TabsTrigger>
-                  <TabsTrigger value="auth">{t("Authentication")}</TabsTrigger>
-                  <TabsTrigger value="games">{t("Games")}</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-hidden">
-              {/* Connection status indicator */}
-              <div className={`px-3 py-1 text-xs border-b flex items-center ${
-                isConnected ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
-              }`}>
-                <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+        <Card className="relative">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
                 <span>
-                  {isConnected 
-                    ? t("Connected to log server - Live streaming") 
-                    : t("Disconnected from log server")}
+                  {activeTab === "live" 
+                    ? t("Live System Logs") 
+                    : t("Historical Logs")}
                 </span>
               </div>
-              
-              {/* Logs container */}
-              <div 
-                ref={logContainerRef}
-                className="h-[calc(100%-28px)] overflow-y-auto font-mono text-sm p-1"
-                style={{ backgroundColor: "#121212" }}
-              >
-                {filteredLogs.length > 0 ? (
-                  <div className="space-y-1 p-2">
+              <Badge>
+                {activeTab === "live" 
+                  ? `${filteredLogs.length} ${t("logs")}`
+                  : `${historicalLogs.length} ${t("logs")}`}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar">
+            {/* Live Logs Tab */}
+            <TabsContent value="live" className="pt-2 m-0">
+              {status === "connected" ? (
+                filteredLogs.length > 0 ? (
+                  <div>
                     {filteredLogs.map((log) => (
-                      <div 
-                        key={log.id} 
-                        className={`p-2 rounded ${
-                          log.level === "error" ? "bg-red-950/30" :
-                          log.level === "warning" ? "bg-yellow-950/30" :
-                          log.level === "info" ? "bg-blue-950/30" : "bg-gray-800/30"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-gray-400">{formatTimestamp(log.timestamp)}</span>
-                          {getLogLevelBadge(log.level)}
-                          <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">{log.source}</span>
-                        </div>
-                        <div className="text-chess-text-light">{log.message}</div>
-                        {log.details && (
-                          <div className="mt-1 text-xs text-gray-400 overflow-x-auto">
-                            <pre>{JSON.stringify(log.details, null, 2)}</pre>
-                          </div>
-                        )}
-                      </div>
+                      <LogItem key={log.id} log={log} />
+                    ))}
+                    <div ref={logsEndRef} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-40">
+                    <Terminal className="h-12 w-12 text-gray-500 mb-2" />
+                    <p className="text-gray-400">{t("Waiting for logs...")}</p>
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40">
+                  <WifiOff className="h-12 w-12 text-gray-500 mb-2" />
+                  <p className="text-gray-400">{t("Connecting to log service...")}</p>
+                  {status === "error" && (
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => window.location.reload()}
+                    >
+                      {t("Reconnect")}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Historical Logs Tab */}
+            <TabsContent value="history" className="pt-2 m-0">
+              {isLoadingLogs ? (
+                <div className="flex flex-col items-center justify-center h-40">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  >
+                    <Activity className="h-12 w-12 text-gray-500 mb-2" />
+                  </motion.div>
+                  <p className="text-gray-400">{t("Loading logs...")}</p>
+                </div>
+              ) : (
+                historicalLogs.length > 0 ? (
+                  <div>
+                    {historicalLogs.map((log: Log) => (
+                      <LogItem key={log.id} log={log} />
                     ))}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    {searchQuery || logLevel !== "all" 
-                      ? t("No logs match your current filters") 
-                      : t("No logs available")}
+                  <div className="flex flex-col items-center justify-center h-40">
+                    <Terminal className="h-12 w-12 text-gray-500 mb-2" />
+                    <p className="text-gray-400">{t("No logs found")}</p>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                )
+              )}
+              
+              {/* Pagination for historical logs */}
+              {historicalLogs.length > 0 && (
+                <div className="flex justify-center mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    {t("Previous")}
+                  </Button>
+                  <div className="mx-4 flex items-center">
+                    {t("Page")} {page}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={historicalLogs.length < 50}
+                  >
+                    {t("Next")}
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </CardContent>
+        </Card>
+      </Tabs>
     </div>
   );
 };

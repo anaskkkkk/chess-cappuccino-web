@@ -14,6 +14,7 @@ export enum WebSocketMessageType {
   TOURNAMENT_UPDATE = 'tournamentUpdate',
   BOARD_STATUS = 'boardStatus',
   NOTIFICATION = 'notification',
+  SYSTEM_LOG = 'systemLog',
   ERROR = 'error'
 }
 
@@ -310,6 +311,13 @@ class WebSocketService {
       console.error('Error getting WebSocket token:', error);
       throw error;
     }
+  }
+
+  /**
+   * Subscribe to system logs
+   */
+  public subscribeToSystemLogs(authToken: string): void {
+    this.sendMessage(WebSocketMessageType.SYSTEM_LOG, { action: 'subscribe', authToken });
   }
 }
 

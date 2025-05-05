@@ -8,6 +8,7 @@ interface UseWebSocketOptions {
   onClose?: () => void;
   onError?: (error: Event) => void;
   autoConnect?: boolean;
+  authToken?: string;
 }
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
@@ -22,7 +23,8 @@ export function useWebSocket<T = any>(
     onOpen,
     onClose,
     onError,
-    autoConnect = true
+    autoConnect = true,
+    authToken
   } = options;
 
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
@@ -113,6 +115,11 @@ export function useWebSocket<T = any>(
       if (gameId) {
         websocketService.joinGame(gameId);
       }
+
+      // Subscribe to system logs if authToken is provided
+      if (authToken && eventType === WebSocketMessageType.SYSTEM_LOG) {
+        websocketService.subscribeToSystemLogs(authToken);
+      }
       
       setStatus('connected');
       onOpen?.();
@@ -123,7 +130,7 @@ export function useWebSocket<T = any>(
       onError?.(error as Event);
       return false;
     }
-  }, [gameId, onOpen, onError]);
+  }, [gameId, onOpen, onError, authToken, eventType]);
 
   const disconnect = useCallback(() => {
     websocketService.disconnect();
@@ -141,7 +148,11 @@ export function useWebSocket<T = any>(
     }
   }, [connect, status]);
 
-  return { connect, disconnect, send, status };
+  const isConnected = useCallback(() => {
+    return websocketService.isConnected();
+  }, []);
+
+  return { connect, disconnect, send, status, isConnected };
 }
 
 export default useWebSocket;
