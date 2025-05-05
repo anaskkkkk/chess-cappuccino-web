@@ -408,6 +408,7 @@ export const enTranslations: TranslationRecord = {
   "Available": "Available",
   "Degraded": "Degraded",
   "Unknown": "Unknown",
+  "day": "day",
   
   // Error messages
   errorMessage: "Error",

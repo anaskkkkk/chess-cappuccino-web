@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Layout from '../components/layout/Layout';
 import Hero from '../components/home/Hero';
 import Features from '../components/home/Features';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ const Index = () => {
   const { t } = useLanguageContext();
   
   return (
-    <Layout>
+    <>
       <Hero />
       <Features />
       
@@ -25,7 +24,7 @@ const Index = () => {
           </Button>
         </Link>
       </div>
-    </Layout>
+    </>
   );
 };
 
