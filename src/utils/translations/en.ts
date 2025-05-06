@@ -1,7 +1,7 @@
 
-import { Translations } from './types';
+import { TranslationRecord } from './types';
 
-const translations: Translations = {
+export const enTranslations: Record<string, string> = {
   // General
   "appName": "SmartChess",
   "tagline": "Play Smarter. Train Better.",
@@ -447,4 +447,4 @@ const translations: Translations = {
   "System Preferences": "System Preferences"
 };
 
-export default translations;
+export default enTranslations;

@@ -1,7 +1,7 @@
 
-import { Translations } from './types';
+import { TranslationRecord } from './types';
 
-const translations: Translations = {
+export const arTranslations: Record<string, string> = {
   // General
   "appName": "شطرنج ذكي",
   "tagline": "العب بذكاء. تدرب بشكل أفضل.",
@@ -447,4 +447,4 @@ const translations: Translations = {
   "System Preferences": "تفضيلات النظام"
 };
 
-export default translations;
+export default arTranslations;

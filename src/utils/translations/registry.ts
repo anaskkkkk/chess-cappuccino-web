@@ -2,8 +2,8 @@
 // Registry of all translations
 
 import { translations as baseTranslations } from './types';
-import { enTranslations } from './en';
-import { arTranslations } from './ar';
+import enTranslations from './en';
+import arTranslations from './ar';
 
 // Register all translations
 export const translations = {

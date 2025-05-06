@@ -7,9 +7,7 @@ export interface TranslationRecord {
   [key: string]: string; // Only accepts string values
 }
 
-export interface Translations {
-  [key: string]: TranslationRecord;
-}
-
 // Empty base translations object to be extended by language files
-export const translations: Translations = {};
+export const translations = {};
+
+export type Translations = Record<string, string>;

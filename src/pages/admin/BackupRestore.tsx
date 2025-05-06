@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -290,10 +289,10 @@ const BackupRestore = () => {
   
   const getBackupStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "success";
-      case "in_progress": return "default";
+      case "completed": return "default";
+      case "in_progress": return "secondary";
       case "failed": return "destructive";
-      default: return "default";
+      default: return "outline";
     }
   };
   
