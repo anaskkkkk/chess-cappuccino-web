@@ -11,7 +11,7 @@ const Index = () => {
   const { t } = useLanguageContext();
   
   return (
-    <>
+    <div className="space-y-12">
       <Hero />
       <Features />
       
@@ -24,7 +24,7 @@ const Index = () => {
           </Button>
         </Link>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -24,6 +24,7 @@ export const adminApi = {
   createNotification: (data: any) => 
     handleResponse(api.post('/admin/notifications', data)),
   
+  // Backup and Restore endpoints
   createBackup: () => 
     handleResponse(api.post('/admin/backup')),
   
@@ -33,9 +34,35 @@ export const adminApi = {
   getBackups: () => 
     handleResponse(api.get('/admin/backups')),
   
+  deleteBackup: (backupId: string) => 
+    handleResponse(api.delete(`/admin/backups/${backupId}`)),
+  
+  downloadBackup: (backupId: string) => 
+    handleResponse(api.get(`/admin/backups/${backupId}/download`)),
+  
+  updateBackupConfig: (config: any) => 
+    handleResponse(api.put('/admin/backup-config', config)),
+    
+  // Feature Flag endpoints
   getFeatureFlags: () => 
     handleResponse(api.get('/admin/feature-flags')),
   
   updateFeatureFlag: (flagId: string, enabled: boolean) => 
     handleResponse(api.put(`/admin/feature-flags/${flagId}`, { enabled })),
+  
+  createFeatureFlag: (flagData: any) => 
+    handleResponse(api.post('/admin/feature-flags', flagData)),
+  
+  deleteFeatureFlag: (flagId: string) => 
+    handleResponse(api.delete(`/admin/feature-flags/${flagId}`)),
+  
+  // Help and Support endpoints
+  getKnowledgeBaseArticles: (category = 'all', page = 1, limit = 20) => 
+    handleResponse(api.get(`/admin/knowledge-base?category=${category}&page=${page}&limit=${limit}`)),
+  
+  getFaqs: () => 
+    handleResponse(api.get('/admin/faqs')),
+  
+  submitSupportRequest: (data: any) => 
+    handleResponse(api.post('/admin/support-requests', data)),
 };

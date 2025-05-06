@@ -49,6 +49,9 @@ import AdminSoundAndAssets from "./pages/admin/SoundAndAssets";
 import AdminRolesAndPermissions from "./pages/admin/RolesAndPermissions";
 import AdminSecurityAudit from "./pages/admin/SecurityAudit";
 import AdminSystemHealth from "./pages/admin/SystemHealth";
+import AdminBackupRestore from "./pages/admin/BackupRestore";
+import AdminFeatureFlags from "./pages/admin/FeatureFlags";
+import AdminHelpAndSupport from "./pages/admin/HelpAndSupport";
 
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -259,6 +262,9 @@ const App: React.FC = () => {
             <Route path="/admin/roles" element={<AdminLayout><AdminRolesAndPermissions /></AdminLayout>} />
             <Route path="/admin/security" element={<AdminLayout><AdminSecurityAudit /></AdminLayout>} />
             <Route path="/admin/health" element={<AdminLayout><AdminSystemHealth /></AdminLayout>} />
+            <Route path="/admin/backup" element={<AdminLayout><AdminBackupRestore /></AdminLayout>} />
+            <Route path="/admin/features" element={<AdminLayout><AdminFeatureFlags /></AdminLayout>} />
+            <Route path="/admin/help" element={<AdminLayout><AdminHelpAndSupport /></AdminLayout>} />
             
             {/* 404 Route */}
             <Route
