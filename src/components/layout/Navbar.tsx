@@ -110,14 +110,14 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile navigation menu */}
+        {/* Mobile navigation menu - improved for better height handling */}
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
-            isOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
+            isOpen ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
           )}
         >
-          <div className="flex flex-col space-y-2 pt-2 pb-3 border-t border-[rgba(255,255,255,0.1)] animate-fade-in">
+          <div className="flex flex-col space-y-1 pt-2 pb-3 border-t border-[rgba(255,255,255,0.1)] animate-fade-in">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -136,7 +136,7 @@ const Navbar = () => {
             >
               <div className="flex items-center gap-2">
                 <Settings size={16} />
-                Admin Console
+                {t("adminConsole")}
               </div>
             </Link>
             
