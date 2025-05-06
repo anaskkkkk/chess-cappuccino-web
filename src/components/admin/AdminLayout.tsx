@@ -45,6 +45,7 @@ import {
   HelpCircle,
   LogOut,
   Settings,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -161,7 +162,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <SidebarFooter className="border-t border-white/10 p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => navigate("/admin/profile")}
+                >
                   <Avatar className="h-8 w-8 border border-white/20">
                     <AvatarFallback className="bg-chess-accent/30 text-chess-text-light">
                       A
@@ -214,6 +218,7 @@ function getCurrentPageTitle(pathname: string): string {
   
   switch (path) {
     case "admin": return "Dashboard";
+    case "profile": return "Admin Profile";
     case "users": return "User Management";
     case "games": return "Game Management";
     case "tournaments": return "Tournament Manager";

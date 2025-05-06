@@ -52,6 +52,7 @@ import AdminSystemHealth from "./pages/admin/SystemHealth";
 import AdminBackupRestore from "./pages/admin/BackupRestore";
 import AdminFeatureFlags from "./pages/admin/FeatureFlags";
 import AdminHelpAndSupport from "./pages/admin/HelpAndSupport";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -245,6 +246,7 @@ const App: React.FC = () => {
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/admin/profile" element={<AdminLayout><AdminProfile /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUserManagement /></AdminLayout>} />
             <Route path="/admin/games" element={<AdminLayout><AdminGameManagement /></AdminLayout>} />
             <Route path="/admin/tournaments" element={<AdminLayout><AdminTournamentManager /></AdminLayout>} />

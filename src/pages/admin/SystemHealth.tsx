@@ -2,288 +2,327 @@
 import React, { useState } from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Activity, CheckCircle, AlertCircle, XCircle, RefreshCw,
   Server, Database, HardDrive, Zap, Network, 
-  ArrowUp, ArrowRight, Clock, Cpu, Memory, HardDriveIcon, Gauge,
+  ArrowUp, ArrowRight, Clock, Cpu, HardDriveIcon, Gauge,
   BarChart4, Stethoscope
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { adminApi } from "@/services/api/endpoints/adminApi";
 
-// Mock data - would come from API in real implementation
-const systemHealthMock = {
+// Interface for system health data
+interface SystemHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  services: ServiceHealth[];
+  resources: ResourceUsage[];
+  incidents: IncidentRecord[];
+  uptime: string;
+  lastChecked: string;
+}
+
+interface ServiceHealth {
+  id: string;
+  name: string;
+  type: 'core' | 'api' | 'database' | 'cache' | 'auth' | 'external';
+  status: 'healthy' | 'warning' | 'critical' | 'unavailable';
+  responseTime: number;
+  lastChecked: string;
+  details?: string;
+}
+
+interface ResourceUsage {
+  id: string;
+  name: string;
+  type: 'cpu' | 'memory' | 'disk' | 'network';
+  currentUsage: number;
+  limit: number;
+  unit: string;
+  trend?: 'up' | 'down' | 'stable';
+  history?: number[];
+}
+
+interface IncidentRecord {
+  id: string;
+  title: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'active' | 'investigating' | 'resolved' | 'monitoring';
+  startTime: string;
+  endTime?: string;
+  services: string[];
+  description: string;
+  updates?: {
+    time: string;
+    message: string;
+  }[];
+}
+
+// Mock data for system health
+const mockSystemHealth: SystemHealth = {
+  status: 'healthy',
+  uptime: '99.98%',
+  lastChecked: new Date().toISOString(),
   services: [
-    { 
-      id: 1, 
-      name: "Main API", 
-      status: "healthy", 
-      uptime: "99.8%", 
-      uptimeDays: 73,
-      responseTime: 127,
-      category: "backend"
+    {
+      id: 'srv-1',
+      name: 'Authentication Service',
+      type: 'core',
+      status: 'healthy',
+      responseTime: 120,
+      lastChecked: new Date().toISOString()
     },
-    { 
-      id: 2, 
-      name: "Database", 
-      status: "healthy", 
-      uptime: "99.9%", 
-      uptimeDays: 124,
-      responseTime: 35,
-      category: "backend"
-    },
-    { 
-      id: 3, 
-      name: "Storage", 
-      status: "healthy", 
-      uptime: "100%", 
-      uptimeDays: 182,
+    {
+      id: 'srv-2',
+      name: 'Game Engine',
+      type: 'core',
+      status: 'healthy',
       responseTime: 95,
-      category: "backend"
+      lastChecked: new Date().toISOString()
     },
-    { 
-      id: 4, 
-      name: "Auth Service", 
-      status: "healthy", 
-      uptime: "99.7%", 
-      uptimeDays: 45,
-      responseTime: 142,
-      category: "backend"
+    {
+      id: 'srv-3',
+      name: 'Database Cluster',
+      type: 'database',
+      status: 'healthy',
+      responseTime: 150,
+      lastChecked: new Date().toISOString()
     },
-    { 
-      id: 5, 
-      name: "WebSocket", 
-      status: "warning", 
-      uptime: "98.2%", 
-      uptimeDays: 21,
-      responseTime: 223,
-      category: "backend"
+    {
+      id: 'srv-4',
+      name: 'Redis Cache',
+      type: 'cache',
+      status: 'warning',
+      responseTime: 210,
+      lastChecked: new Date().toISOString(),
+      details: 'Higher than normal latency'
     },
-    { 
-      id: 6, 
-      name: "Search Service", 
-      status: "healthy", 
-      uptime: "99.5%", 
-      uptimeDays: 67,
-      responseTime: 187,
-      category: "backend"
+    {
+      id: 'srv-5',
+      name: 'Payment Gateway',
+      type: 'external',
+      status: 'healthy',
+      responseTime: 320,
+      lastChecked: new Date().toISOString()
     },
-    { 
-      id: 7, 
-      name: "Email Service", 
-      status: "critical", 
-      uptime: "93.4%", 
-      uptimeDays: 5,
-      responseTime: 876,
-      category: "external"
+    {
+      id: 'srv-6',
+      name: 'Email Service',
+      type: 'external',
+      status: 'critical',
+      responseTime: 1200,
+      lastChecked: new Date().toISOString(),
+      details: 'Connection timeout'
     },
-    { 
-      id: 8, 
-      name: "CDN", 
-      status: "healthy", 
-      uptime: "99.9%", 
-      uptimeDays: 145,
-      responseTime: 32,
-      category: "infrastructure"
+    {
+      id: 'srv-7',
+      name: 'Tournament Manager',
+      type: 'api',
+      status: 'healthy',
+      responseTime: 130,
+      lastChecked: new Date().toISOString()
+    },
+    {
+      id: 'srv-8',
+      name: 'Analytics Engine',
+      type: 'api',
+      status: 'healthy',
+      responseTime: 280,
+      lastChecked: new Date().toISOString()
     }
   ],
-  resources: {
-    cpu: {
-      current: 32,
-      average: 28,
-      peak: 76
+  resources: [
+    {
+      id: 'res-1',
+      name: 'CPU',
+      type: 'cpu',
+      currentUsage: 43,
+      limit: 100,
+      unit: '%',
+      trend: 'stable',
+      history: [38, 42, 45, 39, 43, 47, 41, 40, 43]
     },
-    memory: {
-      current: 58,
-      average: 55,
-      peak: 87,
-      free: "7.2 GB",
-      used: "9.8 GB"
+    {
+      id: 'res-2',
+      name: 'Memory',
+      type: 'memory',
+      currentUsage: 7.2,
+      limit: 16,
+      unit: 'GB',
+      trend: 'up',
+      history: [6.5, 6.8, 6.9, 7.0, 7.1, 7.2, 7.2, 7.2, 7.2]
     },
-    disk: {
-      current: 72,
-      average: 70,
-      peak: 72,
-      free: "234 GB",
-      used: "601 GB"
+    {
+      id: 'res-3',
+      name: 'Disk Usage',
+      type: 'disk',
+      currentUsage: 340,
+      limit: 500,
+      unit: 'GB',
+      trend: 'up',
+      history: [320, 322, 325, 330, 332, 335, 338, 339, 340]
     },
-    network: {
-      in: "1.2 GB/s",
-      out: "876 MB/s",
-      connections: 2347
-    },
-    requests: {
-      perMinute: 12483,
-      errors: 23
-    },
-    load: {
-      current: "2.14",
-      avg1: "2.23",
-      avg5: "2.01",
-      avg15: "1.87"
+    {
+      id: 'res-4',
+      name: 'Network',
+      type: 'network',
+      currentUsage: 120,
+      limit: 1000,
+      unit: 'Mbps',
+      trend: 'down',
+      history: [150, 145, 140, 135, 130, 125, 122, 121, 120]
     }
-  },
+  ],
   incidents: [
     {
-      id: 1,
-      title: "API Gateway Timeout",
-      severity: "medium",
-      status: "resolved",
-      started: "2025-05-03T14:23:12Z",
-      resolved: "2025-05-03T15:46:07Z",
-      affectedServices: ["Main API", "Auth Service"],
-      description: "API gateway experienced intermittent timeouts due to traffic spike."
+      id: 'inc-1',
+      title: 'Email Service Degradation',
+      severity: 'high',
+      status: 'investigating',
+      startTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+      services: ['srv-6'],
+      description: 'Email service is experiencing high latency and occasional timeouts.'
     },
     {
-      id: 2,
-      title: "Database Connection Issues",
-      severity: "high",
-      status: "resolved",
-      started: "2025-05-02T08:17:22Z",
-      resolved: "2025-05-02T09:03:55Z",
-      affectedServices: ["Database", "Main API"],
-      description: "Connection pool exhaustion caused by query optimization issue."
+      id: 'inc-2',
+      title: 'Cache Performance Issues',
+      severity: 'medium',
+      status: 'monitoring',
+      startTime: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 minutes ago
+      services: ['srv-4'],
+      description: 'Redis cache showing higher than normal latency affecting some API responses.'
     },
     {
-      id: 3,
-      title: "Email Service Outage",
-      severity: "critical",
-      status: "ongoing",
-      started: "2025-05-06T07:44:12Z",
-      resolved: null,
-      affectedServices: ["Email Service"],
-      description: "Third-party email provider experiencing service disruption."
+      id: 'inc-3',
+      title: 'Database Failover Event',
+      severity: 'critical',
+      status: 'resolved',
+      startTime: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 24 hours ago
+      endTime: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),   // 23 hours ago
+      services: ['srv-3'],
+      description: 'Database primary node failed and automatic failover was triggered.',
+      updates: [
+        {
+          time: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+          message: 'Issue detected, investigating'
+        },
+        {
+          time: new Date(Date.now() - 1000 * 60 * 60 * 23.5).toISOString(),
+          message: 'Failover process initiated'
+        },
+        {
+          time: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
+          message: 'Failover complete, services restored'
+        }
+      ]
     }
   ]
 };
 
-// Status indicator component
-const StatusIndicator = ({ status }: { status: string }) => {
-  switch (status) {
-    case "healthy":
-      return (
-        <div className="flex items-center">
-          <CheckCircle className="h-5 w-5 text-green-500 mr-1.5" />
-          <span className="font-medium text-green-500">Healthy</span>
-        </div>
-      );
-    case "warning":
-      return (
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-amber-500 mr-1.5" />
-          <span className="font-medium text-amber-500">Warning</span>
-        </div>
-      );
-    case "critical":
-      return (
-        <div className="flex items-center">
-          <XCircle className="h-5 w-5 text-red-500 mr-1.5" />
-          <span className="font-medium text-red-500">Critical</span>
-        </div>
-      );
-    case "unavailable":
-      return (
-        <div className="flex items-center">
-          <XCircle className="h-5 w-5 text-gray-500 mr-1.5" />
-          <span className="font-medium text-gray-500">Unavailable</span>
-        </div>
-      );
-    default:
-      return (
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-gray-400 mr-1.5" />
-          <span className="font-medium text-gray-400">Unknown</span>
-        </div>
-      );
-  }
-};
-
-// Function to determine badge color based on severity
-const getSeverityBadge = (severity: string) => {
-  switch (severity) {
-    case "low":
-      return "outline";
-    case "medium":
-      return "secondary";
-    case "high": 
-      return "destructive";
-    case "critical":
-      return "destructive";
-    default:
-      return "outline";
-  }
-};
-
 const SystemHealth = () => {
   const { t } = useLanguageContext();
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
-
-  // Query to fetch system health data
-  const { data: healthData, isLoading, error, refetch } = useQuery({
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // Query for system health data
+  const { data: healthData, isLoading, refetch } = useQuery<SystemHealth>({
     queryKey: ['systemHealth'],
     queryFn: () => {
       // TODO: Replace with actual API call
       // return adminApi.getSystemHealth();
-      return new Promise(resolve => {
-        setTimeout(() => resolve(systemHealthMock), 1000);
-      });
-    }
+      console.log("Fetching system health data");
+      return Promise.resolve(mockSystemHealth);
+    },
+    staleTime: 30000, // 30 seconds
   });
-
+  
   const handleRefresh = () => {
     refetch();
-    setLastUpdate(new Date());
   };
   
-  const handleRunDiagnostics = () => {
-    setIsRunningDiagnostics(true);
-    
-    // Simulate diagnostics running
-    setTimeout(() => {
-      setIsRunningDiagnostics(false);
-      handleRefresh();
-    }, 3000);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'bg-green-500';
+      case 'warning': return 'bg-yellow-500';
+      case 'critical': return 'bg-red-500';
+      case 'unavailable': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
   };
   
-  // Filter services by category
-  const filteredServices = healthData?.services.filter(service => 
-    selectedCategory === "all" ? true : service.category === selectedCategory
-  ) || [];
-
-  // Calculate overall system status
-  const getOverallStatus = () => {
-    if (!healthData?.services.length) return "unknown";
-    
-    if (healthData.services.some(service => service.status === "critical")) {
-      return "critical";
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'warning': return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+      case 'critical': return <XCircle className="h-5 w-5 text-red-500" />;
+      case 'unavailable': return <AlertCircle className="h-5 w-5 text-gray-500" />;
+      default: return <AlertCircle className="h-5 w-5 text-gray-500" />;
     }
-    
-    if (healthData.services.some(service => service.status === "warning")) {
-      return "warning";
-    }
-    
-    return "healthy";
   };
-
-  // Calculate uptime percentage
-  const calculateUptimePercentage = () => {
-    if (!healthData?.services.length) return 0;
-    
-    const uptimeSum = healthData.services.reduce((sum, service) => {
-      return sum + parseFloat(service.uptime.replace('%', ''));
-    }, 0);
-    
-    return (uptimeSum / healthData.services.length).toFixed(1);
+  
+  const getSeverityBadge = (severity: string) => {
+    switch (severity) {
+      case 'low': return <Badge variant="outline">Low</Badge>;
+      case 'medium': return <Badge variant="default" className="bg-yellow-500">Medium</Badge>;
+      case 'high': return <Badge variant="destructive">High</Badge>;
+      case 'critical': return <Badge variant="destructive" className="bg-red-700">Critical</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+  
+  const getIncidentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active': return <Badge variant="outline" className="border-red-500 text-red-500">Active</Badge>;
+      case 'investigating': return <Badge variant="outline" className="border-orange-500 text-orange-500">Investigating</Badge>;
+      case 'monitoring': return <Badge variant="outline" className="border-blue-500 text-blue-500">Monitoring</Badge>;
+      case 'resolved': return <Badge variant="outline" className="border-green-500 text-green-500">Resolved</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+  
+  const getServiceTypeIcon = (type: string) => {
+    switch (type) {
+      case 'core': return <Server className="h-4 w-4" />;
+      case 'api': return <Network className="h-4 w-4" />;
+      case 'database': return <Database className="h-4 w-4" />;
+      case 'cache': return <Zap className="h-4 w-4" />;
+      case 'auth': return <HardDrive className="h-4 w-4" />;
+      case 'external': return <ArrowRight className="h-4 w-4" />;
+      default: return <Server className="h-4 w-4" />;
+    }
+  };
+  
+  const getResourceTypeIcon = (type: string) => {
+    switch (type) {
+      case 'cpu': return <Cpu className="h-4 w-4" />;
+      case 'memory': return <HardDriveIcon className="h-4 w-4" />;
+      case 'disk': return <HardDrive className="h-4 w-4" />;
+      case 'network': return <Network className="h-4 w-4" />;
+      default: return <Activity className="h-4 w-4" />;
+    }
+  };
+  
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleString();
+    } catch (error) {
+      return "Invalid date";
+    }
+  };
+  
+  // Service counts by status
+  const serviceStatuses = {
+    healthy: healthData?.services.filter(s => s.status === 'healthy').length || 0,
+    warning: healthData?.services.filter(s => s.status === 'warning').length || 0,
+    critical: healthData?.services.filter(s => s.status === 'critical').length || 0,
+    unavailable: healthData?.services.filter(s => s.status === 'unavailable').length || 0,
+    total: healthData?.services.length || 0
   };
 
   return (
@@ -293,392 +332,374 @@ const SystemHealth = () => {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{t("System Health")}</h2>
           <p className="text-muted-foreground">
-            {t("Monitor server status, resource usage, and system performance")}
+            {t("Monitor the status and health of all system components")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleRunDiagnostics} 
-            variant="outline"
-            disabled={isRunningDiagnostics}
-            className="flex items-center gap-2"
-          >
-            <Stethoscope className="h-4 w-4" />
-            {isRunningDiagnostics ? t("Running diagnostics...") : t("Run Diagnostics")}
-          </Button>
-          <Button 
-            onClick={handleRefresh} 
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            {t("Refresh Data")}
-          </Button>
+        <Button 
+          onClick={handleRefresh} 
+          variant="outline" 
+          className="flex gap-2"
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          {t("Refresh Status")}
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <Card key={item} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium bg-gray-200 dark:bg-gray-700 h-4 w-3/4 rounded"></CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-200 dark:bg-gray-700 h-20 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* System Status Summary */}
-        <Card className="md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">{t("System Status")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex flex-col items-center justify-center space-y-2">
-              {getOverallStatus() === "healthy" && (
-                <CheckCircle className="h-12 w-12 text-green-500" />
-              )}
-              {getOverallStatus() === "warning" && (
-                <AlertCircle className="h-12 w-12 text-amber-500" />
-              )}
-              {getOverallStatus() === "critical" && (
-                <XCircle className="h-12 w-12 text-red-500" />
-              )}
-              {getOverallStatus() === "unknown" && (
-                <AlertCircle className="h-12 w-12 text-gray-400" />
-              )}
-              
-              <h3 className="text-xl font-medium">
-                {getOverallStatus() === "healthy" && t("Healthy")}
-                {getOverallStatus() === "warning" && t("Degraded")}
-                {getOverallStatus() === "critical" && t("Critical")}
-                {getOverallStatus() === "unknown" && t("Unknown")}
-              </h3>
-              
-              <p className="text-sm text-muted-foreground">
-                {healthData?.services.length} {t("Services")}
-              </p>
-            </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">{t("System Status")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className={`h-16 w-16 rounded-full flex items-center justify-center ${getStatusColor(healthData?.status || 'unavailable')}`}>
+                    {getStatusIcon(healthData?.status || 'unavailable')}
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold capitalize">{healthData?.status}</div>
+                    <div className="text-sm text-muted-foreground">{t("Last checked")}: {formatTime(healthData?.lastChecked || '')}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{t("Uptime")}</span>
-                <span className="font-medium">{calculateUptimePercentage()}%</span>
-              </div>
-              <Progress value={parseFloat(calculateUptimePercentage())} className="h-2" />
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">{t("Service Health")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-2 bg-green-500/10 rounded-md p-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-medium">{serviceStatuses.healthy} {t("Healthy")}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-yellow-500/10 rounded-md p-2">
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm font-medium">{serviceStatuses.warning} {t("Warning")}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-red-500/10 rounded-md p-2">
+                    <XCircle className="h-4 w-4 text-red-500" />
+                    <span className="text-sm font-medium">{serviceStatuses.critical} {t("Critical")}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-500/10 rounded-md p-2">
+                    <AlertCircle className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{serviceStatuses.unavailable} {t("Unavailable")}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <div className="text-xs text-muted-foreground">
-              {t("Last Updated")}: {lastUpdate.toLocaleTimeString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Resource Usage */}
-        <Card className="md:col-span-3">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">{t("System Metrics")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* CPU Usage */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Cpu className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t("CPU Usage")}</span>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">{t("System Uptime")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <ArrowUp className="h-8 w-8 text-blue-500" />
                   </div>
-                  <span className="text-sm font-medium">{healthData?.resources.cpu.current}%</span>
-                </div>
-                <Progress value={healthData?.resources.cpu.current} className="h-1" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{t("Average")}: {healthData?.resources.cpu.average}%</span>
-                  <span>{t("Peak")}: {healthData?.resources.cpu.peak}%</span>
-                </div>
-              </div>
-              
-              {/* Memory Usage */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Memory className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t("Memory Usage")}</span>
-                  </div>
-                  <span className="text-sm font-medium">{healthData?.resources.memory.current}%</span>
-                </div>
-                <Progress value={healthData?.resources.memory.current} className="h-1" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{t("Free")}: {healthData?.resources.memory.free}</span>
-                  <span>{t("Used")}: {healthData?.resources.memory.used}</span>
-                </div>
-              </div>
-              
-              {/* Disk Usage */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <HardDriveIcon className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t("Disk Usage")}</span>
-                  </div>
-                  <span className="text-sm font-medium">{healthData?.resources.disk.current}%</span>
-                </div>
-                <Progress value={healthData?.resources.disk.current} className="h-1" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{t("Free")}: {healthData?.resources.disk.free}</span>
-                  <span>{t("Used")}: {healthData?.resources.disk.used}</span>
-                </div>
-              </div>
-              
-              {/* Load Average */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Gauge className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t("Load Average")}</span>
-                  </div>
-                  <span className="text-sm font-medium">{healthData?.resources.load.current}</span>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground pt-3">
-                  <div className="space-x-2">
-                    <span>1m: {healthData?.resources.load.avg1}</span>
-                    <span>5m: {healthData?.resources.load.avg5}</span>
-                    <span>15m: {healthData?.resources.load.avg15}</span>
+                  <div>
+                    <div className="text-2xl font-bold">{healthData?.uptime}</div>
+                    <div className="text-sm text-muted-foreground">{t("Last 30 days")}</div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Tabs defaultValue="services">
-        <TabsList className="grid grid-cols-3 max-w-[400px]">
-          <TabsTrigger value="services">{t("Services")}</TabsTrigger>
-          <TabsTrigger value="resources">{t("Resources")}</TabsTrigger>
-          <TabsTrigger value="incidents">{t("Incidents")}</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="services" className="space-y-4">
-          <div className="flex items-center space-x-2 py-2">
-            <Button
-              variant={selectedCategory === "all" ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory("all")}
-            >
-              {t("All")}
-            </Button>
-            <Button
-              variant={selectedCategory === "backend" ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory("backend")}
-            >
-              {t("Backend Services")}
-            </Button>
-            <Button
-              variant={selectedCategory === "infrastructure" ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory("infrastructure")}
-            >
-              {t("Infrastructure")}
-            </Button>
-            <Button
-              variant={selectedCategory === "external" ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory("external")}
-            >
-              {t("External Services")}
-            </Button>
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">{t("Service")}</TableHead>
-                  <TableHead>{t("Status")}</TableHead>
-                  <TableHead className="hidden sm:table-cell">{t("Uptime")}</TableHead>
-                  <TableHead className="hidden sm:table-cell">{t("Response Time")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  [...Array(5)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="h-5 w-1/2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="h-5 w-1/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="h-5 w-1/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredServices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                      No services found matching your filter.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredServices.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell className="font-medium">{service.name}</TableCell>
-                      <TableCell>
-                        <StatusIndicator status={service.status} />
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="flex items-center">
-                          <span className="font-medium">{service.uptime}</span>
-                          <span className="text-muted-foreground text-xs ml-2">
-                            ({service.uptimeDays} {service.uptimeDays === 1 ? t("day") : t("days")})
-                          </span>
+              </CardContent>
+            </Card>
+            
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">{t("Resource Usage")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {healthData?.resources.map(resource => (
+                    <div key={resource.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getResourceTypeIcon(resource.type)}
+                          <span className="font-medium">{resource.name}</span>
                         </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <span className="font-medium">{service.responseTime} {t("ms")}</span>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="resources" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* CPU Chart */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-medium">{t("CPU")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                  <BarChart4 className="h-16 w-16" />
-                  {/* CPU chart would go here */}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Memory Chart */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-medium">{t("Memory")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                  <BarChart4 className="h-16 w-16" />
-                  {/* Memory chart would go here */}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Network Chart */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-medium">{t("Network")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                  <BarChart4 className="h-16 w-16" />
-                  {/* Network chart would go here */}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-medium">{t("Current")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <h3 className="text-sm font-medium mb-1">{t("Network In")}</h3>
-                  <p className="text-2xl font-semibold">{healthData?.resources.network.in}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-1">{t("Network Out")}</h3>
-                  <p className="text-2xl font-semibold">{healthData?.resources.network.out}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-1">{t("Active Connections")}</h3>
-                  <p className="text-2xl font-semibold">{healthData?.resources.network.connections}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-1">{t("requests")}/{t("errors")}</h3>
-                  <p className="text-2xl font-semibold">
-                    {healthData?.resources.requests.perMinute}/{' '}
-                    <span className="text-red-500">{healthData?.resources.requests.errors}</span>
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="incidents" className="space-y-4">
-          <h3 className="text-lg font-medium">{t("Recent Incidents")}</h3>
-          
-          {healthData?.incidents.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-muted-foreground">
-                {t("No incidents reported")}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {healthData?.incidents.map((incident) => (
-                <Card key={incident.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-base font-medium">{incident.title}</CardTitle>
-                        <CardDescription>
-                          {new Date(incident.started).toLocaleString()}
-                        </CardDescription>
+                        <div className="text-sm">
+                          {resource.currentUsage} / {resource.limit} {resource.unit}
+                          {resource.trend === 'up' && <ArrowUp className="inline ml-1 h-3 w-3 text-red-500" />}
+                          {resource.trend === 'down' && <ArrowUp className="inline ml-1 h-3 w-3 text-green-500 rotate-180" />}
+                          {resource.trend === 'stable' && <ArrowRight className="inline ml-1 h-3 w-3 text-blue-500" />}
+                        </div>
                       </div>
-                      <Badge variant={getSeverityBadge(incident.severity)}>
-                        {incident.severity}
-                      </Badge>
+                      <Progress 
+                        value={(resource.currentUsage / resource.limit) * 100} 
+                        className={`
+                          ${(resource.currentUsage / resource.limit) > 0.9 ? 'bg-red-200' : ''}
+                          ${(resource.currentUsage / resource.limit) > 0.7 && (resource.currentUsage / resource.limit) <= 0.9 ? 'bg-yellow-200' : ''}
+                          ${(resource.currentUsage / resource.limit) <= 0.7 ? 'bg-green-200' : ''}
+                        `}
+                      />
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <p className="text-sm">{incident.description}</p>
-                    
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {incident.affectedServices.map((service, idx) => (
-                        <Badge key={idx} variant="outline">{service}</Badge>
-                      ))}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">{t("Active Incidents")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {healthData?.incidents.filter(i => i.status !== 'resolved').length === 0 ? (
+                    <div className="text-center py-4">
+                      <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">{t("No active incidents")}</p>
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <div className="flex justify-between items-center w-full text-sm">
-                      <Badge variant={incident.status === "resolved" ? "outline" : "destructive"}>
-                        {incident.status === "resolved" ? t("Resolved") : t("Open")}
-                      </Badge>
-                      
-                      {incident.resolved && (
-                        <span className="text-muted-foreground">
-                          {t("Resolved")}: {new Date(incident.resolved).toLocaleString()}
-                        </span>
-                      )}
-                      
-                      {!incident.resolved && (
-                        <Button variant="outline" size="sm">
-                          {t("Mark as Resolved")}
-                        </Button>
-                      )}
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                  ) : (
+                    healthData?.incidents
+                      .filter(i => i.status !== 'resolved')
+                      .map(incident => (
+                        <div key={incident.id} className="border rounded-md p-2">
+                          <div className="flex justify-between items-start">
+                            <div className="font-medium">{incident.title}</div>
+                            {getSeverityBadge(incident.severity)}
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {formatTime(incident.startTime)}
+                          </div>
+                          <div className="mt-2">
+                            {getIncidentStatusBadge(incident.status)}
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        
+          <div className="mt-8">
+            <Tabs defaultValue="services" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="services">{t("Services")}</TabsTrigger>
+                <TabsTrigger value="resources">{t("Resources")}</TabsTrigger>
+                <TabsTrigger value="incidents">{t("Incidents")}</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="services" className="space-y-4 mt-4">
+                <div className="rounded-md border">
+                  <div className="grid grid-cols-12 p-4 font-medium bg-muted">
+                    <div className="col-span-4">{t("Service")}</div>
+                    <div className="col-span-2">{t("Type")}</div>
+                    <div className="col-span-2 text-center">{t("Status")}</div>
+                    <div className="col-span-2 text-center">{t("Response Time")}</div>
+                    <div className="col-span-2 text-right">{t("Last Checked")}</div>
+                  </div>
+                  
+                  <div className="divide-y">
+                    {healthData?.services.map(service => (
+                      <div key={service.id} className="grid grid-cols-12 p-4">
+                        <div className="col-span-4">
+                          <div className="font-medium">{service.name}</div>
+                          {service.details && (
+                            <div className="text-sm text-muted-foreground mt-1">{service.details}</div>
+                          )}
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          {getServiceTypeIcon(service.type)}
+                          <span className="capitalize">{service.type}</span>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-center">
+                          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                            service.status === 'healthy' ? 'bg-green-500/10 text-green-600' :
+                            service.status === 'warning' ? 'bg-yellow-500/10 text-yellow-600' :
+                            service.status === 'critical' ? 'bg-red-500/10 text-red-600' :
+                            'bg-gray-500/10 text-gray-600'
+                          }`}>
+                            {getStatusIcon(service.status)}
+                            <span className="capitalize">{service.status}</span>
+                          </div>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-center">
+                          <Badge variant={
+                            service.responseTime < 150 ? "outline" : 
+                            service.responseTime < 300 ? "secondary" : 
+                            "default"
+                          }>
+                            {service.responseTime}ms
+                          </Badge>
+                        </div>
+                        <div className="col-span-2 text-right text-sm text-muted-foreground">
+                          {formatTime(service.lastChecked)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="resources" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {healthData?.resources.map(resource => (
+                    <Card key={resource.id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-medium flex items-center gap-2">
+                            {getResourceTypeIcon(resource.type)}
+                            {resource.name}
+                          </CardTitle>
+                          <Badge variant={
+                            (resource.currentUsage / resource.limit) > 0.9 ? "destructive" : 
+                            (resource.currentUsage / resource.limit) > 0.7 ? "default" : 
+                            "outline"
+                          }>
+                            {resource.currentUsage} / {resource.limit} {resource.unit}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Progress 
+                            value={(resource.currentUsage / resource.limit) * 100} 
+                            className={`h-3 ${
+                              (resource.currentUsage / resource.limit) > 0.9 ? 'bg-red-200' : 
+                              (resource.currentUsage / resource.limit) > 0.7 ? 'bg-yellow-200' : 
+                              'bg-green-200'
+                            }`}
+                          />
+                          
+                          {resource.history && (
+                            <div className="mt-4 h-16 flex items-end gap-1">
+                              {resource.history.map((value, idx) => (
+                                <div 
+                                  key={idx} 
+                                  className={`w-full bg-primary rounded-sm ${
+                                    (value / resource.limit) > 0.9 ? 'bg-red-500' : 
+                                    (value / resource.limit) > 0.7 ? 'bg-yellow-500' : 
+                                    'bg-green-500'
+                                  }`} 
+                                  style={{ height: `${(value / resource.limit) * 100}%` }}
+                                  title={`${value} ${resource.unit}`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+                            <span>{t("Trend")}:</span>
+                            <div className="flex items-center">
+                              {resource.trend === 'up' && (
+                                <div className="flex items-center text-red-500">
+                                  <ArrowUp className="h-3 w-3 mr-1" /> {t("Increasing")}
+                                </div>
+                              )}
+                              {resource.trend === 'down' && (
+                                <div className="flex items-center text-green-500">
+                                  <ArrowUp className="h-3 w-3 mr-1 rotate-180" /> {t("Decreasing")}
+                                </div>
+                              )}
+                              {resource.trend === 'stable' && (
+                                <div className="flex items-center text-blue-500">
+                                  <ArrowRight className="h-3 w-3 mr-1" /> {t("Stable")}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="incidents" className="space-y-4 mt-4">
+                {healthData?.incidents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium">{t("No incidents reported")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("All systems are operating normally")}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {healthData?.incidents.map(incident => (
+                      <Card key={incident.id}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg font-medium">{incident.title}</CardTitle>
+                            <div className="flex gap-2">
+                              {getSeverityBadge(incident.severity)}
+                              {getIncidentStatusBadge(incident.status)}
+                            </div>
+                          </div>
+                          <CardDescription>
+                            {t("Started")}: {formatTime(incident.startTime)}
+                            {incident.endTime && (
+                              <> • {t("Resolved")}: {formatTime(incident.endTime)}</>
+                            )}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="mb-4">{incident.description}</p>
+                          
+                          {incident.updates && incident.updates.length > 0 && (
+                            <div className="border-t pt-4">
+                              <h4 className="font-medium mb-2">{t("Updates")}</h4>
+                              <div className="space-y-3">
+                                {incident.updates.map((update, idx) => (
+                                  <div key={idx} className="flex gap-4">
+                                    <div className="flex flex-col items-center">
+                                      <div className="h-2 w-2 rounded-full bg-primary"></div>
+                                      {idx < incident.updates!.length - 1 && (
+                                        <div className="w-0.5 h-full bg-primary/30"></div>
+                                      )}
+                                    </div>
+                                    <div className="space-y-1 pb-3">
+                                      <div className="text-sm text-muted-foreground">{formatTime(update.time)}</div>
+                                      <div>{update.message}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="text-sm text-muted-foreground mr-1">{t("Affected services")}:</div>
+                            {incident.services.map((serviceId) => {
+                              const service = healthData.services.find(s => s.id === serviceId);
+                              return service && (
+                                <Badge key={serviceId} variant="outline">
+                                  {service.name}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 };

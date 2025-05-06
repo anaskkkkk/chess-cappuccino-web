@@ -26,8 +26,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+// Types for Feature Flags
+interface FeatureFlag {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string;
+  enabled: boolean;
+  environment: string;
+  category: string;
+  lastUpdated: string;
+  updatedBy: string;
+}
+
 // Mock Feature Flags Data
-const mockFeatureFlags = [
+const mockFeatureFlags: FeatureFlag[] = [
   {
     id: "ff-001",
     name: "new_chessboard_ui",
@@ -128,7 +141,7 @@ const FeatureFlags = () => {
   });
   
   // Query to fetch feature flags
-  const { data: featureFlags, isLoading } = useQuery({
+  const { data: featureFlags, isLoading } = useQuery<FeatureFlag[]>({
     queryKey: ['featureFlags'],
     queryFn: () => {
       // TODO: Replace with actual API call
