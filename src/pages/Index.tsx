@@ -20,7 +20,7 @@ const Index = () => {
         <Link to="/admin">
           <Button variant="outline" className="border-chess-accent text-chess-accent hover:bg-chess-accent/10 flex items-center gap-2">
             <LayoutDashboard size={18} />
-            Admin Console
+            {t("adminConsole")}
           </Button>
         </Link>
       </div>

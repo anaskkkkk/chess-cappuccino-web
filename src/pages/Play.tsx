@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { 
   Clock, 
@@ -18,12 +16,14 @@ import {
 import { toast } from 'sonner';
 import { createGame } from '@/services/gameService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useLanguageContext } from '@/contexts/LanguageContext';
 
 const Play = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
   const [showFriendDialog, setShowFriendDialog] = useState(false);
   const [friendCode, setFriendCode] = useState('');
+  const { t } = useLanguageContext();
 
   const handleQuickPlay = async () => {
     try {
@@ -78,244 +78,235 @@ const Play = () => {
       
       // Navigate to the game
       navigate(`/game/${gameData.id}`);
-    } catch (error) {
-      console.error('Failed to start AI game:', error);
-      toast.error('Failed to start AI game. Please try again.');
     } finally {
       setLoading(null);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-chess-dark">
-      <Navbar />
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-chess-text-light mb-8">{t("playChess")}</h1>
       
-      <main className="flex-grow">
-        <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold text-chess-text-light mb-8">Play Chess</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <Gamepad className="h-5 w-5 text-chess-accent" />
-                Quick Play
-              </h3>
-              <p className="text-gray-400 mb-4">Jump into a game with a random opponent.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={handleQuickPlay}
-                disabled={loading === 'quickplay'}
-              >
-                {loading === 'quickplay' ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Finding Match...
-                  </>
-                ) : (
-                  <>Find Match</>
-                )}
-              </Button>
-            </div>
-
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-chess-accent" />
-                Play with Friend
-              </h3>
-              <p className="text-gray-400 mb-4">Challenge a friend to a game of chess.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={() => setShowFriendDialog(true)}
-                disabled={loading === 'friend'}
-              >
-                Create Game
-              </Button>
-            </div>
-
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-chess-accent" />
-                Play with AI
-              </h3>
-              <p className="text-gray-400 mb-4">Test your skills against our artificial intelligence.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={handleAIPlay}
-                disabled={loading === 'ai'}
-              >
-                {loading === 'ai' ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Setting Up...
-                  </>
-                ) : (
-                  <>Start Game</>
-                )}
-              </Button>
-            </div>
-
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-chess-accent" />
-                Tournaments
-              </h3>
-              <p className="text-gray-400 mb-4">Compete with players from around the world.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={() => navigate('/tournaments')}
-              >
-                Browse Tournaments
-              </Button>
-            </div>
-
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-chess-accent" />
-                Analysis
-              </h3>
-              <p className="text-gray-400 mb-4">Review and analyze your chess games.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={() => navigate('/analysis')}
-              >
-                Open Analysis Board
-              </Button>
-            </div>
-
-            <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
-                <Eye className="h-5 w-5 text-chess-accent" />
-                Spectate
-              </h3>
-              <p className="text-gray-400 mb-4">Watch live games from top players.</p>
-              <Button 
-                className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={() => navigate('/spectate')}
-              >
-                Browse Live Games
-              </Button>
-            </div>
-          </div>
-          
-          {/* Game modes section */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-chess-text-light mb-6">Game Modes</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
-                onClick={() => toast.info('Bullet mode selected')}
-              >
-                <Clock className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <p className="font-medium">Bullet</p>
-                  <p className="text-xs text-gray-400">1 minute per side</p>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
-                onClick={() => toast.info('Blitz mode selected')}
-              >
-                <Clock className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <p className="font-medium">Blitz</p>
-                  <p className="text-xs text-gray-400">3+2 minutes</p>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
-                onClick={() => toast.info('Rapid mode selected')}
-              >
-                <Clock className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <p className="font-medium">Rapid</p>
-                  <p className="text-xs text-gray-400">10 minutes per side</p>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
-                onClick={() => toast.info('Classical mode selected')}
-              >
-                <Clock className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <p className="font-medium">Classical</p>
-                  <p className="text-xs text-gray-400">30 minutes per side</p>
-                </div>
-              </Button>
-            </div>
-          </div>
-          
-          {/* Find players section */}
-          <div className="mt-12 bg-chess-dark border border-[rgba(255,255,255,0.12)] rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-chess-text-light mb-6 flex items-center gap-2">
-              <Users className="h-6 w-6 text-chess-accent" />
-              Find Players
-            </h2>
-            
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              <div className="w-full md:w-2/3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    placeholder="Search by username, rating range, or online status"
-                    className="w-full pl-10 pr-4 py-3 bg-chess-dark border border-[rgba(255,255,255,0.2)] rounded-md text-chess-text-light focus:outline-none focus:border-chess-accent"
-                  />
-                </div>
-              </div>
-              <Button 
-                className="w-full md:w-auto px-8 bg-chess-accent text-chess-text-light hover:bg-opacity-90"
-                onClick={() => toast.info('Search functionality coming soon')}
-              >
-                Search
-              </Button>
-            </div>
-            
-            <div className="mt-6 flex flex-wrap gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
-                onClick={() => toast.info('Filter applied: Online players')}
-              >
-                Online Now
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
-                onClick={() => toast.info('Filter applied: Similar rating')}
-              >
-                Similar Rating
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
-                onClick={() => toast.info('Filter applied: Friends only')}
-              >
-                Friends Only
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
-                onClick={() => toast.info('Filter applied: Looking for games')}
-              >
-                Looking for Games
-              </Button>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <Gamepad className="h-5 w-5 text-chess-accent" />
+            {t("quickPlay")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("quickPlayDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={handleQuickPlay}
+            disabled={loading === 'quickplay'}
+          >
+            {loading === 'quickplay' ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {t("findingMatch")}
+              </>
+            ) : (
+              <>{t("findMatch")}</>
+            )}
+          </Button>
         </div>
-      </main>
+
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-chess-accent" />
+            {t("playWithFriend")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("playWithFriendDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={() => setShowFriendDialog(true)}
+            disabled={loading === 'friend'}
+          >
+            Create Game
+          </Button>
+        </div>
+
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-chess-accent" />
+            {t("playWithAI")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("playWithAIDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={handleAIPlay}
+            disabled={loading === 'ai'}
+          >
+            {loading === 'ai' ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {t("settingUpAI")}
+              </>
+            ) : (
+              <>Start Game</>
+            )}
+          </Button>
+        </div>
+
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-chess-accent" />
+            {t("tournaments")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("tournamentsDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={() => navigate('/tournaments')}
+          >
+            Browse Tournaments
+          </Button>
+        </div>
+
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-chess-accent" />
+            {t("analysis")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("analysisDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={() => navigate('/analysis')}
+          >
+            Open Analysis Board
+          </Button>
+        </div>
+
+        <div className="bg-chess-dark border-subtle hover-lift card-hover rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-chess-text-light mb-2 flex items-center gap-2">
+            <Eye className="h-5 w-5 text-chess-accent" />
+            {t("spectate")}
+          </h3>
+          <p className="text-gray-400 mb-4">{t("spectateDescription")}</p>
+          <Button 
+            className="w-full bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={() => navigate('/spectate')}
+          >
+            Browse Live Games
+          </Button>
+        </div>
+      </div>
       
+      {/* Game modes section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-chess-text-light mb-6">{t("gameModes")}</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Button
+            variant="outline"
+            className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
+            onClick={() => toast.info('Bullet mode selected')}
+          >
+            <Clock className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Bullet</p>
+              <p className="text-xs text-gray-400">1 minute per side</p>
+            </div>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
+            onClick={() => toast.info('Blitz mode selected')}
+          >
+            <Clock className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Blitz</p>
+              <p className="text-xs text-gray-400">3+2 minutes</p>
+            </div>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
+            onClick={() => toast.info('Rapid mode selected')}
+          >
+            <Clock className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Rapid</p>
+              <p className="text-xs text-gray-400">10 minutes per side</p>
+            </div>
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="h-auto py-4 justify-start border-[rgba(255,255,255,0.12)] hover:border-chess-accent text-chess-text-light hover:bg-chess-accent/5"
+            onClick={() => toast.info('Classical mode selected')}
+          >
+            <Clock className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Classical</p>
+              <p className="text-xs text-gray-400">30 minutes per side</p>
+            </div>
+          </Button>
+        </div>
+      </div>
+      
+      {/* Find players section */}
+      <div className="mt-12 bg-chess-dark border border-[rgba(255,255,255,0.12)] rounded-lg p-8">
+        <h2 className="text-2xl font-bold text-chess-text-light mb-6 flex items-center gap-2">
+          <Users className="h-6 w-6 text-chess-accent" />
+          {t("findPlayers")}
+        </h2>
+        
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="w-full md:w-2/3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search by username, rating range, or online status"
+                className="w-full pl-10 pr-4 py-3 bg-chess-dark border border-[rgba(255,255,255,0.2)] rounded-md text-chess-text-light focus:outline-none focus:border-chess-accent"
+              />
+            </div>
+          </div>
+          <Button 
+            className="w-full md:w-auto px-8 bg-chess-accent text-chess-text-light hover:bg-opacity-90"
+            onClick={() => toast.info('Search functionality coming soon')}
+          >
+            Search
+          </Button>
+        </div>
+        
+        <div className="mt-6 flex flex-wrap gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
+            onClick={() => toast.info('Filter applied: Online players')}
+          >
+            Online Now
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
+            onClick={() => toast.info('Filter applied: Similar rating')}
+          >
+            Similar Rating
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
+            onClick={() => toast.info('Filter applied: Friends only')}
+          >
+            Friends Only
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[rgba(255,255,255,0.12)] text-chess-text-light hover:bg-white/5"
+            onClick={() => toast.info('Filter applied: Looking for games')}
+          >
+            Looking for Games
+          </Button>
+        </div>
+      </div>
+    
       {/* Play with Friend Dialog */}
       <Dialog open={showFriendDialog} onOpenChange={setShowFriendDialog}>
         <DialogContent className="bg-chess-dark text-chess-text-light border border-[rgba(255,255,255,0.12)]">
@@ -378,8 +369,6 @@ const Play = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      <Footer />
     </div>
   );
 };

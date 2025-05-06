@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '@/components/layout/Layout';
 import ChessboardComponent from '@/components/game/Chessboard';
 import GameInfo from '@/components/game/GameInfo';
 import MoveList from '@/components/game/MoveList';
@@ -14,6 +13,7 @@ import { toast } from 'sonner';
 import useGameStore from '@/stores/gameStore';
 import { Loader2 } from 'lucide-react';
 import { getGame } from '@/services/gameService';
+import { useLanguageContext } from '@/contexts/LanguageContext';
 
 const Game = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -23,6 +23,7 @@ const Game = () => {
   const [boardFlipped, setBoardFlipped] = useState(false);
   const [inCheck, setInCheck] = useState(false);
   const [checkSquare, setCheckSquare] = useState<string | null>(null);
+  const { t } = useLanguageContext();
   
   const { 
     gameState, 
@@ -295,46 +296,42 @@ const Game = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-chess-accent" />
-            <p className="text-chess-text-light text-xl">Loading game...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-chess-accent" />
+          <p className="text-chess-text-light text-xl">{t("loadingGame")}</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left side - Chess board */}
-          <div className="w-full lg:w-2/3">
-            <ChessboardComponent 
-              fen={gameState?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} 
-              playerColor={boardFlipped ? (playerColor === 'w' ? 'b' : 'w') : playerColor}
-              lastMove={lastMove}
-              selectedSquare={selectedSquare}
-              legalMoves={legalMoves}
-              onSquareClick={handleSquareSelect}
-              inCheck={inCheck}
-              checkSquare={checkSquare}
-            />
-            <GameControls 
-              onResign={handleResign} 
-              onOfferDraw={handleOfferDraw}
-              onFlipBoard={handleFlipBoard}
-            />
-          </div>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left side - Chess board */}
+        <div className="w-full lg:w-2/3">
+          <ChessboardComponent 
+            fen={gameState?.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'} 
+            playerColor={boardFlipped ? (playerColor === 'w' ? 'b' : 'w') : playerColor}
+            lastMove={lastMove}
+            selectedSquare={selectedSquare}
+            legalMoves={legalMoves}
+            onSquareClick={handleSquareSelect}
+            inCheck={inCheck}
+            checkSquare={checkSquare}
+          />
+          <GameControls 
+            onResign={handleResign} 
+            onOfferDraw={handleOfferDraw}
+            onFlipBoard={handleFlipBoard}
+          />
+        </div>
 
-          {/* Right side - Game info, move list, chat */}
-          <div className="w-full lg:w-1/3 flex flex-col gap-6">
-            <GameInfo gameState={gameState} />
-            <MoveList moves={gameState?.moves || []} />
-            <GameChat gameId={gameId || ''} />
-          </div>
+        {/* Right side - Game info, move list, chat */}
+        <div className="w-full lg:w-1/3 flex flex-col gap-6">
+          <GameInfo gameState={gameState} />
+          <MoveList moves={gameState?.moves || []} />
+          <GameChat gameId={gameId || ''} />
         </div>
       </div>
       
@@ -347,7 +344,7 @@ const Game = () => {
           onClose={handleCloseResultModal} 
         />
       )}
-    </Layout>
+    </div>
   );
 };
 
