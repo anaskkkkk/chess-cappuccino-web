@@ -35,4 +35,11 @@ export const smartBoardApi = {
   
   getBoardLogs: (boardId: string, limit = 100) => 
     handleResponse(api.get(`/smartboards/${boardId}/logs?limit=${limit}`)),
+  
+  // These are the new methods for QR code scanning functionality
+  validateScannedCode: (qrCode: string) => 
+    handleResponse(api.post('/smartboards/validate-qr', { qrCode })),
+  
+  pairBoardByQrCode: (qrCode: string, userId: string) => 
+    handleResponse(api.post('/smartboards/pair-by-qr', { qrCode, userId })),
 };

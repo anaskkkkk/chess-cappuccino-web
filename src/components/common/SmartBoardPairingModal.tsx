@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import {
   Dialog,
@@ -10,17 +10,99 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { QrCode, Cpu } from "lucide-react";
+import { Cpu, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { Html5Qrcode } from "html5-qrcode";
 
 const SmartBoardPairingModal: React.FC = () => {
   const { t } = useLanguageContext();
   const [serialNumber, setSerialNumber] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [pairingMethod, setPairingMethod] = useState<'qr' | 'manual'>('qr');
+  const [pairingMethod, setPairingMethod] = useState<'camera' | 'manual'>('camera');
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Clean up scanner when component unmounts or dialog closes
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current && isScanning) {
+        scannerRef.current.stop().catch(error => {
+          console.error("Error stopping scanner:", error);
+        });
+      }
+    };
+  }, [isScanning]);
+
+  useEffect(() => {
+    if (!isOpen && scannerRef.current && isScanning) {
+      scannerRef.current.stop().catch(error => {
+        console.error("Error stopping scanner:", error);
+      });
+      setIsScanning(false);
+    }
+
+    if (isOpen && pairingMethod === 'camera' && !isScanning) {
+      startScanner();
+    }
+  }, [isOpen, pairingMethod]);
+
+  const startScanner = async () => {
+    if (!qrContainerRef.current) return;
+    
+    try {
+      if (scannerRef.current) {
+        await scannerRef.current.stop();
+      }
+
+      scannerRef.current = new Html5Qrcode("qr-reader");
+      
+      await scannerRef.current.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1,
+        },
+        (decodedText) => {
+          // QR Code scanned successfully
+          handleQrCodeSuccess(decodedText);
+        },
+        (errorMessage) => {
+          // QR Code scanning continues, only log errors if needed
+          console.log(errorMessage);
+        }
+      );
+      
+      setIsScanning(true);
+    } catch (error) {
+      console.error("Error starting QR scanner:", error);
+      toast.error(t("cameraAccessFailed"));
+      setPairingMethod('manual');
+    }
+  };
+
+  const stopScanner = async () => {
+    if (scannerRef.current && isScanning) {
+      try {
+        await scannerRef.current.stop();
+        setIsScanning(false);
+      } catch (error) {
+        console.error("Error stopping scanner:", error);
+      }
+    }
+  };
+
+  const handleQrCodeSuccess = (decodedText: string) => {
+    setSerialNumber(decodedText);
+    toast.info(t("qrCodeDetected"));
+    
+    // Optionally auto-pair when QR code is detected
+    // handleSubmit();
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
     try {
       if (pairingMethod === 'manual' && !serialNumber.trim()) {
@@ -34,7 +116,7 @@ const SmartBoardPairingModal: React.FC = () => {
       /* TODO REST:/api/boards/pair */  
       /* TODO WS:pair_board */
       
-      console.log('Pairing board with:', pairingMethod === 'qr' ? 'QR code' : serialNumber);
+      console.log('Pairing board with serial number:', serialNumber);
       
       // Simulate success for now
       setTimeout(() => {
@@ -47,8 +129,15 @@ const SmartBoardPairingModal: React.FC = () => {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open && isScanning) {
+      stopScanner();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button 
           variant="ghost" 
@@ -67,29 +156,56 @@ const SmartBoardPairingModal: React.FC = () => {
         <div className="flex flex-col space-y-4">
           <div className="flex space-x-2 mt-2">
             <Button 
-              variant={pairingMethod === 'qr' ? 'default' : 'outline'} 
-              className={pairingMethod === 'qr' ? 'bg-chess-accent text-chess-text-light' : ''}
-              onClick={() => setPairingMethod('qr')}
+              variant={pairingMethod === 'camera' ? 'default' : 'outline'} 
+              className={pairingMethod === 'camera' ? 'bg-chess-accent text-chess-text-light' : ''}
+              onClick={() => {
+                setPairingMethod('camera');
+                if (!isScanning) {
+                  setTimeout(() => {
+                    startScanner();
+                  }, 300);
+                }
+              }}
             >
-              <QrCode className="mr-2 h-4 w-4" />
+              <Camera className="mr-2 h-4 w-4" />
               {t("scanQRCode")}
             </Button>
             <Button 
               variant={pairingMethod === 'manual' ? 'default' : 'outline'}
               className={pairingMethod === 'manual' ? 'bg-chess-accent text-chess-text-light' : ''}
-              onClick={() => setPairingMethod('manual')}
+              onClick={() => {
+                setPairingMethod('manual');
+                stopScanner();
+              }}
             >
               <Cpu className="mr-2 h-4 w-4" />
               {t("enterSerialNumber")}
             </Button>
           </div>
           
-          {pairingMethod === 'qr' ? (
-            <div className="flex flex-col items-center justify-center p-6 border border-dashed border-chess-accent/50 rounded-lg">
-              <QrCode size={150} className="text-chess-accent mb-4" />
-              <p className="text-center text-sm text-chess-text-dark/80">
+          {pairingMethod === 'camera' ? (
+            <div className="flex flex-col items-center justify-center">
+              <div 
+                id="qr-reader" 
+                ref={qrContainerRef} 
+                className="w-full max-w-sm overflow-hidden rounded-lg border border-chess-accent/50"
+                style={{ height: '280px' }}
+              ></div>
+              <p className="text-center text-sm mt-2 text-chess-text-dark/80">
                 {t("scanQRInstructions")}
               </p>
+              {serialNumber && (
+                <div className="mt-3 w-full">
+                  <label className="text-sm font-medium">
+                    {t("detectedSerialNumber")}
+                  </label>
+                  <Input
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    className="bg-white border-chess-accent/30 mt-1"
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
