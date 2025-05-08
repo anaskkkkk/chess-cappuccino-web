@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
@@ -73,176 +72,29 @@ const App: React.FC = () => {
       <LanguageProvider>
         <Router>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <Layout>
-                  <Index />
-                </Layout>
-              }
-            />
+            <Route path="/" element={<Layout><Index /></Layout>} />
             
             {/* Main Routes */}
-            <Route
-              path="/play"
-              element={
-                <Layout>
-                  <Play />
-                </Layout>
-              }
-            />
-            <Route
-              path="/learn"
-              element={
-                <Layout>
-                  <Learn />
-                </Layout>
-              }
-            />
-            <Route
-              path="/game/:id"
-              element={
-                <Layout>
-                  <Game />
-                </Layout>
-              }
-            />
-            <Route
-              path="/store"
-              element={
-                <Layout>
-                  <Store />
-                </Layout>
-              }
-            />
-            <Route
-              path="/store/accessories"
-              element={
-                <Layout>
-                  <Accessories />
-                </Layout>
-              }
-            />
-            <Route
-              path="/store/gift-cards"
-              element={
-                <Layout>
-                  <GiftCards />
-                </Layout>
-              }
-            />
-            <Route
-              path="/smart-board"
-              element={
-                <Layout>
-                  <SmartBoard />
-                </Layout>
-              }
-            />
-            <Route
-              path="/analysis"
-              element={
-                <Layout>
-                  <Analysis />
-                </Layout>
-              }
-            />
-            <Route
-              path="/spectate"
-              element={
-                <Layout>
-                  <Spectate />
-                </Layout>
-              }
-            />
-            <Route
-              path="/community"
-              element={
-                <Layout>
-                  <Community />
-                </Layout>
-              }
-            />
-            <Route
-              path="/tournaments"
-              element={
-                <Layout>
-                  <Tournaments />
-                </Layout>
-              }
-            />
-            <Route
-              path="/puzzles"
-              element={
-                <Layout>
-                  <Puzzles />
-                </Layout>
-              }
-            />
-            <Route
-              path="/courses"
-              element={
-                <Layout>
-                  <Courses />
-                </Layout>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <Layout>
-                  <Login />
-                </Layout>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <Layout>
-                  <Signup />
-                </Layout>
-              }
-            />
-            <Route
-              path="/onboarding"
-              element={
-                <Layout>
-                  <Onboarding />
-                </Layout>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              }
-            />
-            <Route
-              path="/faq"
-              element={
-                <Layout>
-                  <FAQ />
-                </Layout>
-              }
-            />
-            <Route
-              path="/privacy-policy"
-              element={
-                <Layout>
-                  <PrivacyPolicy />
-                </Layout>
-              }
-            />
-            <Route
-              path="/terms-of-service"
-              element={
-                <Layout>
-                  <TermsOfService />
-                </Layout>
-              }
-            />
+            <Route path="/play" element={<Layout><Play /></Layout>} />
+            <Route path="/learn" element={<Layout><Learn /></Layout>} />
+            <Route path="/game/:id" element={<Layout><Game /></Layout>} />
+            <Route path="/store" element={<Layout><Store /></Layout>} />
+            <Route path="/store/accessories" element={<Layout><Accessories /></Layout>} />
+            <Route path="/store/gift-cards" element={<Layout><GiftCards /></Layout>} />
+            <Route path="/smart-board" element={<Layout><SmartBoard /></Layout>} />
+            <Route path="/analysis" element={<Layout><Analysis /></Layout>} />
+            <Route path="/spectate" element={<Layout><Spectate /></Layout>} />
+            <Route path="/community" element={<Layout><Community /></Layout>} />
+            <Route path="/tournaments" element={<Layout><Tournaments /></Layout>} />
+            <Route path="/puzzles" element={<Layout><Puzzles /></Layout>} />
+            <Route path="/courses" element={<Layout><Courses /></Layout>} />
+            <Route path="/login" element={<Layout><Login /></Layout>} />
+            <Route path="/signup" element={<Layout><Signup /></Layout>} />
+            <Route path="/onboarding" element={<Layout><Onboarding /></Layout>} />
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+            <Route path="/privacy-policy" element={<Layout><PrivacyPolicy /></Layout>} />
+            <Route path="/terms-of-service" element={<Layout><TermsOfService /></Layout>} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
@@ -269,14 +121,7 @@ const App: React.FC = () => {
             <Route path="/admin/help" element={<AdminLayout><AdminHelpAndSupport /></AdminLayout>} />
             
             {/* 404 Route */}
-            <Route
-              path="*"
-              element={
-                <Layout>
-                  <NotFound />
-                </Layout>
-              }
-            />
+            <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>
         </Router>
         <Toaster />
