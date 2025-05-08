@@ -2,13 +2,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Menu, X, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BoardStatus from "@/components/common/BoardStatus";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useLanguageContext } from "@/contexts/LanguageContext";
+import ProfileDropdown from "@/components/common/ProfileDropdown";
+import SmartBoardPairingModal from "@/components/common/SmartBoardPairingModal";
 
 const Navbar = () => {
   const isMobile = useIsMobile();
@@ -81,6 +82,9 @@ const Navbar = () => {
             <BoardStatus />
             <LanguageSwitcher />
             
+            {/* SmartBoard Pairing Button */}
+            <SmartBoardPairingModal />
+            
             {/* Admin link for easy access */}
             <Link to="/admin">
               <Button
@@ -93,20 +97,8 @@ const Navbar = () => {
               </Button>
             </Link>
             
-            <Link to="/login">
-              <Button
-                variant="outline"
-                className="border-chess-accent text-chess-accent hover:bg-chess-accent/10"
-              >
-                {t("signIn")}
-              </Button>
-            </Link>
-            
-            <Link to="/signup">
-              <Button className="bg-chess-accent text-chess-text-light hover:bg-opacity-90">
-                {t("signUp")}
-              </Button>
-            </Link>
+            {/* Profile Dropdown */}
+            <ProfileDropdown />
           </div>
         </div>
 
@@ -114,7 +106,7 @@ const Navbar = () => {
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
-            isOpen ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
+            isOpen ? "max-h-[600px] opacity-100 mt-2" : "max-h-0 opacity-0"
           )}
         >
           <div className="flex flex-col space-y-1 pt-2 pb-3 border-t border-[rgba(255,255,255,0.1)] animate-fade-in">
@@ -140,12 +132,28 @@ const Navbar = () => {
               </div>
             </Link>
             
+            <Link
+              to="/profile"
+              className="text-chess-text-light hover:bg-white/10 px-4 py-2 rounded transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="flex items-center gap-2">
+                <span className="bg-chess-accent text-chess-text-light px-2 py-1 rounded-full text-xs">
+                  {t("profile").charAt(0).toUpperCase()}
+                </span>
+                {t("profile")}
+              </div>
+            </Link>
+            
             <div className={cn(
               "flex items-center justify-between px-4 py-2",
               isRTL && "flex-row-reverse"
             )}>
               <BoardStatus />
-              <LanguageSwitcher />
+              <div className="flex items-center gap-2">
+                <LanguageSwitcher />
+                <SmartBoardPairingModal />
+              </div>
             </div>
             
             <div className={cn(

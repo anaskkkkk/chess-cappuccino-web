@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
@@ -28,6 +29,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Accessories from "./pages/Accessories";
 import GiftCards from "./pages/GiftCards";
+import Profile from "./pages/Profile";
 
 // Admin page imports
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -55,6 +57,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
+import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,58 +74,61 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
-            
-            {/* Main Routes */}
-            <Route path="/play" element={<Layout><Play /></Layout>} />
-            <Route path="/learn" element={<Layout><Learn /></Layout>} />
-            <Route path="/game/:id" element={<Layout><Game /></Layout>} />
-            <Route path="/store" element={<Layout><Store /></Layout>} />
-            <Route path="/store/accessories" element={<Layout><Accessories /></Layout>} />
-            <Route path="/store/gift-cards" element={<Layout><GiftCards /></Layout>} />
-            <Route path="/smart-board" element={<Layout><SmartBoard /></Layout>} />
-            <Route path="/analysis" element={<Layout><Analysis /></Layout>} />
-            <Route path="/spectate" element={<Layout><Spectate /></Layout>} />
-            <Route path="/community" element={<Layout><Community /></Layout>} />
-            <Route path="/tournaments" element={<Layout><Tournaments /></Layout>} />
-            <Route path="/puzzles" element={<Layout><Puzzles /></Layout>} />
-            <Route path="/courses" element={<Layout><Courses /></Layout>} />
-            <Route path="/login" element={<Layout><Login /></Layout>} />
-            <Route path="/signup" element={<Layout><Signup /></Layout>} />
-            <Route path="/onboarding" element={<Layout><Onboarding /></Layout>} />
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-            <Route path="/privacy-policy" element={<Layout><PrivacyPolicy /></Layout>} />
-            <Route path="/terms-of-service" element={<Layout><TermsOfService /></Layout>} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-            <Route path="/admin/profile" element={<AdminLayout><AdminProfile /></AdminLayout>} />
-            <Route path="/admin/users" element={<AdminLayout><AdminUserManagement /></AdminLayout>} />
-            <Route path="/admin/games" element={<AdminLayout><AdminGameManagement /></AdminLayout>} />
-            <Route path="/admin/tournaments" element={<AdminLayout><AdminTournamentManager /></AdminLayout>} />
-            <Route path="/admin/courses" element={<AdminLayout><AdminCoursesCMS /></AdminLayout>} />
-            <Route path="/admin/puzzles" element={<AdminLayout><AdminPuzzleManagement /></AdminLayout>} />
-            <Route path="/admin/content" element={<AdminLayout><AdminContentPages /></AdminLayout>} />
-            <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPayments /></AdminLayout>} />
-            <Route path="/admin/smartboards" element={<AdminLayout><AdminSmartBoardFleet /></AdminLayout>} />
-            <Route path="/admin/logs" element={<AdminLayout><AdminRealTimeLogs /></AdminLayout>} />
-            <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
-            <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
-            <Route path="/admin/localization" element={<AdminLayout><AdminLocalizationManagement /></AdminLayout>} />
-            <Route path="/admin/integrations" element={<AdminLayout><AdminIntegrationsManagement /></AdminLayout>} />
-            <Route path="/admin/assets" element={<AdminLayout><AdminSoundAndAssets /></AdminLayout>} />
-            <Route path="/admin/roles" element={<AdminLayout><AdminRolesAndPermissions /></AdminLayout>} />
-            <Route path="/admin/security" element={<AdminLayout><AdminSecurityAudit /></AdminLayout>} />
-            <Route path="/admin/health" element={<AdminLayout><AdminSystemHealth /></AdminLayout>} />
-            <Route path="/admin/backup" element={<AdminLayout><AdminBackupRestore /></AdminLayout>} />
-            <Route path="/admin/features" element={<AdminLayout><AdminFeatureFlags /></AdminLayout>} />
-            <Route path="/admin/help" element={<AdminLayout><AdminHelpAndSupport /></AdminLayout>} />
-            
-            {/* 404 Route */}
-            <Route path="*" element={<Layout><NotFound /></Layout>} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              
+              {/* Main Routes */}
+              <Route path="/play" element={<Layout><Play /></Layout>} />
+              <Route path="/learn" element={<Layout><Learn /></Layout>} />
+              <Route path="/game/:id" element={<Layout><Game /></Layout>} />
+              <Route path="/store" element={<Layout><Store /></Layout>} />
+              <Route path="/store/accessories" element={<Layout><Accessories /></Layout>} />
+              <Route path="/store/gift-cards" element={<Layout><GiftCards /></Layout>} />
+              <Route path="/smart-board" element={<Layout><SmartBoard /></Layout>} />
+              <Route path="/analysis" element={<Layout><Analysis /></Layout>} />
+              <Route path="/spectate" element={<Layout><Spectate /></Layout>} />
+              <Route path="/community" element={<Layout><Community /></Layout>} />
+              <Route path="/tournaments" element={<Layout><Tournaments /></Layout>} />
+              <Route path="/puzzles" element={<Layout><Puzzles /></Layout>} />
+              <Route path="/courses" element={<Layout><Courses /></Layout>} />
+              <Route path="/login" element={<Layout><Login /></Layout>} />
+              <Route path="/signup" element={<Layout><Signup /></Layout>} />
+              <Route path="/onboarding" element={<Layout><Onboarding /></Layout>} />
+              <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/profile" element={<Layout><Profile /></Layout>} />
+              <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+              <Route path="/privacy-policy" element={<Layout><PrivacyPolicy /></Layout>} />
+              <Route path="/terms-of-service" element={<Layout><TermsOfService /></Layout>} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+              <Route path="/admin/profile" element={<AdminLayout><AdminProfile /></AdminLayout>} />
+              <Route path="/admin/users" element={<AdminLayout><AdminUserManagement /></AdminLayout>} />
+              <Route path="/admin/games" element={<AdminLayout><AdminGameManagement /></AdminLayout>} />
+              <Route path="/admin/tournaments" element={<AdminLayout><AdminTournamentManager /></AdminLayout>} />
+              <Route path="/admin/courses" element={<AdminLayout><AdminCoursesCMS /></AdminLayout>} />
+              <Route path="/admin/puzzles" element={<AdminLayout><AdminPuzzleManagement /></AdminLayout>} />
+              <Route path="/admin/content" element={<AdminLayout><AdminContentPages /></AdminLayout>} />
+              <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPayments /></AdminLayout>} />
+              <Route path="/admin/smartboards" element={<AdminLayout><AdminSmartBoardFleet /></AdminLayout>} />
+              <Route path="/admin/logs" element={<AdminLayout><AdminRealTimeLogs /></AdminLayout>} />
+              <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
+              <Route path="/admin/analytics" element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
+              <Route path="/admin/localization" element={<AdminLayout><AdminLocalizationManagement /></AdminLayout>} />
+              <Route path="/admin/integrations" element={<AdminLayout><AdminIntegrationsManagement /></AdminLayout>} />
+              <Route path="/admin/assets" element={<AdminLayout><AdminSoundAndAssets /></AdminLayout>} />
+              <Route path="/admin/roles" element={<AdminLayout><AdminRolesAndPermissions /></AdminLayout>} />
+              <Route path="/admin/security" element={<AdminLayout><AdminSecurityAudit /></AdminLayout>} />
+              <Route path="/admin/health" element={<AdminLayout><AdminSystemHealth /></AdminLayout>} />
+              <Route path="/admin/backup" element={<AdminLayout><AdminBackupRestore /></AdminLayout>} />
+              <Route path="/admin/features" element={<AdminLayout><AdminFeatureFlags /></AdminLayout>} />
+              <Route path="/admin/help" element={<AdminLayout><AdminHelpAndSupport /></AdminLayout>} />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<Layout><NotFound /></Layout>} />
+            </Routes>
+          </AuthProvider>
         </Router>
         <Toaster />
         <SonnerToaster position="top-right" />
