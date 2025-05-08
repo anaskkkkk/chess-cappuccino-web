@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { UserCircle, Save, Trash2, Award, History, ChessKnight, Gamepad2, BarChart3 } from "lucide-react";
+import { UserCircle, Save, Trash2, Award, History, Gamepad2, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import SmartBoardPairingModal from "@/components/common/SmartBoardPairingModal";
 
@@ -32,8 +32,8 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    bio: user?.bio || "",
-    country: user?.country || "",
+    bio: "",  // Changed from user?.bio since it doesn't exist in the User type
+    country: "", // Changed from user?.country since it doesn't exist in the User type
   });
 
   // Mock data for visualization - in a real app, this would come from an API
@@ -246,7 +246,7 @@ const Profile = () => {
                 </div>
                 
                 <div className="bg-white p-6 rounded-lg shadow-sm flex items-center gap-4">
-                  <ChessKnight className="h-10 w-10 text-chess-accent" />
+                  <Award className="h-10 w-10 text-chess-accent" />
                   <div>
                     <h3 className="text-sm text-gray-600">{t("puzzlesSolved")}</h3>
                     <p className="text-2xl font-bold">{mockGameStats.puzzlesSolved}</p>
