@@ -10,96 +10,65 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Cpu, Camera } from "lucide-react";
+import { Cpu, Camera, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Html5Qrcode } from "html5-qrcode";
+import { useQrScanner } from "@/hooks/useQrScanner";
 
 const SmartBoardPairingModal: React.FC = () => {
   const { t } = useLanguageContext();
   const [serialNumber, setSerialNumber] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [pairingMethod, setPairingMethod] = useState<'camera' | 'manual'>('camera');
-  const [isScanning, setIsScanning] = useState(false);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
   const qrContainerRef = useRef<HTMLDivElement>(null);
-
-  // Clean up scanner when component unmounts or dialog closes
-  useEffect(() => {
-    return () => {
-      if (scannerRef.current && isScanning) {
-        scannerRef.current.stop().catch(error => {
-          console.error("Error stopping scanner:", error);
-        });
-      }
-    };
-  }, [isScanning]);
-
-  useEffect(() => {
-    if (!isOpen && scannerRef.current && isScanning) {
-      scannerRef.current.stop().catch(error => {
-        console.error("Error stopping scanner:", error);
-      });
-      setIsScanning(false);
-    }
-
-    if (isOpen && pairingMethod === 'camera' && !isScanning) {
-      startScanner();
-    }
-  }, [isOpen, pairingMethod]);
-
-  const startScanner = async () => {
-    if (!qrContainerRef.current) return;
-    
-    try {
-      if (scannerRef.current) {
-        await scannerRef.current.stop();
-      }
-
-      scannerRef.current = new Html5Qrcode("qr-reader");
-      
-      await scannerRef.current.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1,
-        },
-        (decodedText) => {
-          // QR Code scanned successfully
-          handleQrCodeSuccess(decodedText);
-        },
-        (errorMessage) => {
-          // QR Code scanning continues, only log errors if needed
-          console.log(errorMessage);
-        }
-      );
-      
-      setIsScanning(true);
-    } catch (error) {
-      console.error("Error starting QR scanner:", error);
+  
+  const {
+    scannedCode,
+    error,
+    isScanning,
+    cameraPermissionDenied,
+    start,
+    stop
+  } = useQrScanner({
+    onSuccess: (decodedText) => {
+      setSerialNumber(decodedText);
+      toast.info(t("qrCodeDetected"));
+    },
+    onError: (errorMessage) => {
+      console.error("QR Scanner error:", errorMessage);
       toast.error(t("cameraAccessFailed"));
       setPairingMethod('manual');
-    }
-  };
+    },
+    timeoutSeconds: 30
+  });
 
-  const stopScanner = async () => {
-    if (scannerRef.current && isScanning) {
-      try {
-        await scannerRef.current.stop();
-        setIsScanning(false);
-      } catch (error) {
-        console.error("Error stopping scanner:", error);
-      }
+  // Start/stop camera based on modal state and pairing method
+  useEffect(() => {
+    if (isOpen && pairingMethod === 'camera' && !isScanning) {
+      // Short delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        start('qr-reader');
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  };
-
-  const handleQrCodeSuccess = (decodedText: string) => {
-    setSerialNumber(decodedText);
-    toast.info(t("qrCodeDetected"));
     
-    // Optionally auto-pair when QR code is detected
-    // handleSubmit();
-  };
+    if (!isOpen && isScanning) {
+      stop();
+    }
+  }, [isOpen, pairingMethod, isScanning, start, stop]);
+
+  // Show manual entry if camera permission is denied
+  useEffect(() => {
+    if (cameraPermissionDenied && pairingMethod === 'camera') {
+      setPairingMethod('manual');
+    }
+  }, [cameraPermissionDenied, pairingMethod]);
+
+  // Update serial number when QR code is detected
+  useEffect(() => {
+    if (scannedCode) {
+      setSerialNumber(scannedCode);
+    }
+  }, [scannedCode]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -132,7 +101,7 @@ const SmartBoardPairingModal: React.FC = () => {
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open && isScanning) {
-      stopScanner();
+      stop();
     }
   };
 
@@ -161,11 +130,10 @@ const SmartBoardPairingModal: React.FC = () => {
               onClick={() => {
                 setPairingMethod('camera');
                 if (!isScanning) {
-                  setTimeout(() => {
-                    startScanner();
-                  }, 300);
+                  start('qr-reader');
                 }
               }}
+              disabled={cameraPermissionDenied}
             >
               <Camera className="mr-2 h-4 w-4" />
               {t("scanQRCode")}
@@ -175,7 +143,7 @@ const SmartBoardPairingModal: React.FC = () => {
               className={pairingMethod === 'manual' ? 'bg-chess-accent text-chess-text-light' : ''}
               onClick={() => {
                 setPairingMethod('manual');
-                stopScanner();
+                stop();
               }}
             >
               <Cpu className="mr-2 h-4 w-4" />
@@ -191,9 +159,18 @@ const SmartBoardPairingModal: React.FC = () => {
                 className="w-full max-w-sm overflow-hidden rounded-lg border border-chess-accent/50"
                 style={{ height: '280px' }}
               ></div>
+              
+              {error && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md flex items-center text-red-700">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <p className="text-sm">{t("scannerError")}</p>
+                </div>
+              )}
+              
               <p className="text-center text-sm mt-2 text-chess-text-dark/80">
                 {t("scanQRInstructions")}
               </p>
+              
               {serialNumber && (
                 <div className="mt-3 w-full">
                   <label className="text-sm font-medium">
