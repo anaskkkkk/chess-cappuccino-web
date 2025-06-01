@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
@@ -30,6 +29,9 @@ import TermsOfService from "./pages/TermsOfService";
 import Accessories from "./pages/Accessories";
 import GiftCards from "./pages/GiftCards";
 import Profile from "./pages/Profile";
+import Leaderboard from "./pages/Leaderboard";
+import AddFriend from "./pages/AddFriend";
+import Friends from "./pages/Friends";
 
 // Admin page imports
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -89,7 +91,10 @@ const App: React.FC = () => {
               <Route path="/analysis" element={<Layout><Analysis /></Layout>} />
               <Route path="/spectate" element={<Layout><Spectate /></Layout>} />
               <Route path="/community" element={<Layout><Community /></Layout>} />
+              <Route path="/leaderboard" element={<Layout><Leaderboard /></Layout>} />
               <Route path="/tournaments" element={<Layout><Tournaments /></Layout>} />
+              <Route path="/add-friend" element={<Layout><AddFriend /></Layout>} />
+              <Route path="/friends" element={<Layout><Friends /></Layout>} />
               <Route path="/puzzles" element={<Layout><Puzzles /></Layout>} />
               <Route path="/courses" element={<Layout><Courses /></Layout>} />
               <Route path="/login" element={<Layout><Login /></Layout>} />
